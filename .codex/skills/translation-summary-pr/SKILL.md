@@ -1,6 +1,6 @@
 ---
 name: translation-summary-pr
-description: angular-ja で指定されたファイルを CONTRIBUTING.md の翻訳ガイドラインに沿って日本語で要約し、summary ファイル作成から branch 作成、commit、push、PR 作成まで一括実行するときに使う。ファイルパスだけ渡して要約PRを作りたい依頼で起動する。
+description: angular-ja で指定されたファイルを CONTRIBUTING.md の翻訳ガイドラインに沿って日本語で要約し、既存翻訳との用語平仄を合わせた summary ファイル作成から branch 作成と commit まで一括実行するときに使う。ファイルパスだけ渡して要約作業を完了したい依頼で起動する。
 ---
 
 # translation-summary-pr
@@ -8,7 +8,7 @@ description: angular-ja で指定されたファイルを CONTRIBUTING.md の翻
 ## Goal
 
 - 入力された 1 つのファイルパスをもとに、`*.summary.md` を作成または更新する。
-- `fix(docs): {file name} translations` 形式で commit と PR を作成する。
+- `fix(docs): {file name} translations` 形式で commit メッセージ（兼PRタイトル候補）を作成する。
 
 ## Input
 
@@ -20,20 +20,19 @@ description: angular-ja で指定されたファイルを CONTRIBUTING.md の翻
 - 事前確認:
   - `test -e "$TARGET_PATH"`
   - `git rev-parse --is-inside-work-tree`
-  - `gh auth status`
-  - `gh api rate_limit`
 - 派生情報の計算:
   - `eval "$(.codex/skills/translation-summary-pr/scripts/prepare_summary_pr.sh "$TARGET_PATH")"`
+- 用語平仄チェック:
+  - `rg -n "Angularアニメーション|Angular Animations" adev-ja/src/content --glob '!**/*.en.md'`
+  - 対象ドキュメントと同テーマの既存翻訳を読み、優先訳語を確定する。
 - lint（日本語文面を追加/更新した場合）:
   - `pnpm run lint`
-- Git/PR:
+- Git（ローカルのみ）:
   - `git switch -c "$BRANCH_NAME"`（同名 branch がなければ）
   - `git add "$SUMMARY_REL"`
   - `git status --short`
   - `git diff --cached --name-only`
   - `git commit -m "$PR_TITLE"`
-  - `git push -u origin "$BRANCH_NAME"`
-  - `gh pr create --base main --head "$BRANCH_NAME" --title "$PR_TITLE" --body "$PR_BODY"`
 
 ## Summary Format
 
@@ -60,18 +59,21 @@ description: angular-ja で指定されたファイルを CONTRIBUTING.md の翻
 
 - `CONTRIBUTING.md` の方針に従い、原文のニュアンスを保ち、過度な意訳を避ける。
 - 技術文書として簡潔に書き、曖昧な主観を入れない。
+- プロジェクト内の既存翻訳を正とし、用語の平仄を最優先で合わせる（例: `Angularアニメーション` を採用し、`Angular Animations` は使わない）。
+- 表記ゆれが見つかった場合は、該当箇所を既存訳語へ翻訳し直す。
 - 対象ファイル本体は変更せず、要約ファイルのみを変更する。
 - 要約で日本語を変更した場合は `pnpm run lint` を必ず実行する。
-- PRタイトルは必ず `fix(docs): {file name} translations` とする。
+- Git 操作は `git commit` までに限定し、`git push` や PR の作成・更新は実行しない。
 
 ## Workflow
 
-1. 対象ファイルの存在、Git 管理下、GitHub 疎通を確認する。
+1. 対象ファイルの存在と Git 管理下を確認する。
 2. `prepare_summary_pr.sh` を実行して `SUMMARY_REL`、`BRANCH_NAME`、`PR_TITLE` を取得する。
-3. 対象ファイルを読んで要約を作成し、`$SUMMARY_REL` を上書きする。
-4. 日本語変更があるため `pnpm run lint` を実行し、失敗時は修正して再実行する。
-5. `git add` から `gh pr create` まで実行して PR を作る。
-6. 最終報告では `summary ファイルパス`、`実行コマンド`、`PR URL` を短く提示する。
+3. 対象ファイルの主要用語を抽出し、同カテゴリの既存翻訳を検索して優先訳語を決める。
+4. 優先訳語に合わせて要約を作成し、`$SUMMARY_REL` を上書きする。
+5. 日本語変更があるため `pnpm run lint` を実行し、失敗時は修正して再実行する。
+6. `git add` から `git commit` まで実行する。
+7. 最終報告では `summary ファイルパス`、`正規化した用語`、`実行コマンド` を短く提示する。
 
 ## PR Body Template
 
