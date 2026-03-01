@@ -25,6 +25,8 @@ description: angular-ja で指定されたファイルを CONTRIBUTING.md の翻
 - 用語平仄チェック:
   - `rg -n "Angularアニメーション|Angular Animations" adev-ja/src/content --glob '!**/*.en.md'`
   - 対象ドキュメントと同テーマの既存翻訳を読み、優先訳語を確定する。
+- 見出しアンカーチェック:
+  - `rg -n '^# .*\{#' "$TARGET_PATH"` でトップレベル見出しの明示アンカー有無を確認する。
 - lint（日本語文面を追加/更新した場合）:
   - `pnpm run lint`
 - Git（ローカルのみ）:
@@ -61,6 +63,7 @@ description: angular-ja で指定されたファイルを CONTRIBUTING.md の翻
 - 技術文書として簡潔に書き、曖昧な主観を入れない。
 - プロジェクト内の既存翻訳を正とし、用語の平仄を最優先で合わせる（例: `Angularアニメーション` を採用し、`Angular Animations` は使わない）。
 - 表記ゆれが見つかった場合は、該当箇所を既存訳語へ翻訳し直す。
+- トップレベル見出し（`# ...`）には明示アンカー（`{#...}`）を付けない。他ファイルの既存スタイルに合わせる。
 - 対象ファイル本体は変更せず、要約ファイルのみを変更する。
 - 要約で日本語を変更した場合は `pnpm run lint` を必ず実行する。
 - Git 操作は `git commit` までに限定し、`git push` や PR の作成・更新は実行しない。
@@ -70,10 +73,11 @@ description: angular-ja で指定されたファイルを CONTRIBUTING.md の翻
 1. 対象ファイルの存在と Git 管理下を確認する。
 2. `prepare_summary_pr.sh` を実行して `SUMMARY_REL`、`BRANCH_NAME`、`PR_TITLE` を取得する。
 3. 対象ファイルの主要用語を抽出し、同カテゴリの既存翻訳を検索して優先訳語を決める。
-4. 優先訳語に合わせて要約を作成し、`$SUMMARY_REL` を上書きする。
-5. 日本語変更があるため `pnpm run lint` を実行し、失敗時は修正して再実行する。
-6. `git add` から `git commit` まで実行する。
-7. 最終報告では `summary ファイルパス`、`正規化した用語`、`実行コマンド` を短く提示する。
+4. トップレベル見出しに明示アンカーがある場合は削除し、見出し構成を既存スタイルに合わせる。
+5. 優先訳語に合わせて要約を作成し、`$SUMMARY_REL` を上書きする。
+6. 日本語変更があるため `pnpm run lint` を実行し、失敗時は修正して再実行する。
+7. `git add` から `git commit` まで実行する。
+8. 最終報告では `summary ファイルパス`、`正規化した用語`、`実行コマンド` を短く提示する。
 
 ## PR Body Template
 
