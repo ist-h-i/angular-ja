@@ -1,4 +1,4 @@
-# Angular Animationsパッケージからの移行 {#migrating-away-from-angulars-animations-package}
+# Angularアニメーションパッケージからの移行 {#migrating-away-from-angulars-animations-package}
 
 `@angular/animations`はAngular v20.2で非推奨になりました。
 同時に導入された `animate.enter` と `animate.leave`、およびネイティブCSSを使うことで、従来のアニメーション実装を置き換えられます。
@@ -64,7 +64,7 @@
 
 ### 親子アニメーション {#parent-child-animations}
 
-Angular Animationsのような優先制御はありません。
+Angularアニメーションのような優先制御はありません。
 順序制御が必要な場合は、`animation-delay` / `transition-delay` や `animationend` / `transitionend` イベントを使って連鎖させます。
 
 ### 特定のアニメーションまたは全体を無効化する {#disabling-an-animation-or-all-animations}
