@@ -1,4 +1,4 @@
-# Angularアニメーションパッケージからの移行 {#migrating-away-from-angulars-animations-package}
+# Angularアニメーションパッケージからの移行
 
 `@angular/animations`はAngular v20.2で非推奨になりました。
 同時に導入された `animate.enter` と `animate.leave`、およびネイティブCSSを使うことで、従来のアニメーション実装を置き換えられます。
