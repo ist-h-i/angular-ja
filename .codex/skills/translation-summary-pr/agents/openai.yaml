@@ -1,0 +1,4 @@
+interface:
+  display_name: "Translation Summary PR"
+  short_description: "Create summary files and PRs from one path"
+  default_prompt: "Given one file path, create a summary file and open a PR."
