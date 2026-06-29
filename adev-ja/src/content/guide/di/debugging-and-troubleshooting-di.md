@@ -1,16 +1,16 @@
-# Debugging and troubleshooting dependency injection
+# 依存性の注入のデバッグとトラブルシューティング
 
-Dependency injection (DI) issues typically stem from configuration mistakes, scope problems, or incorrect usage patterns. This guide helps you identify and resolve common DI problems that developers encounter.
+依存性の注入（DI）の問題は、通常、構成ミス、スコープの問題、または誤った使用パターンから発生します。このガイドでは、開発者が遭遇しやすい一般的なDIの問題を特定し、解決する方法を説明します。
 
-## Common pitfalls and solutions
+## よくある落とし穴と解決策 {#common-pitfalls-and-solutions}
 
-### Services not available where expected
+### 期待した場所でサービスを利用できない {#services-not-available-where-expected}
 
-One of the most common DI issues occurs when you try to inject a service but Angular cannot find it in the current injector or any parent injector. This usually happens when the service is provided in the wrong scope or not provided at all.
+もっとも一般的なDIの問題の1つは、サービスを注入しようとしたものの、Angularが現在のインジェクターや親インジェクターのいずれからもそのサービスを見つけられない場合に発生します。これは通常、サービスが誤ったスコープで提供されているか、まったく提供されていない場合に起こります。
 
-#### Provider scope mismatch
+#### プロバイダースコープの不一致 {#provider-scope-mismatch}
 
-When you provide a service in a component's `providers` array, Angular creates an instance in that component's injector. This instance is only available to that component and its children. Parent components and sibling components cannot access it because they use different injectors.
+コンポーネントの`providers`配列でサービスを提供すると、Angularはそのコンポーネントのインジェクターにインスタンスを作成します。このインスタンスは、そのコンポーネントと子コンポーネントでのみ利用できます。親コンポーネントや兄弟コンポーネントは異なるインジェクターを使用するため、このインスタンスにはアクセスできません。
 
 ```angular-ts {header: 'child-view.ts'}
 import {Component} from '@angular/core';
@@ -37,9 +37,9 @@ export class ParentView {
 }
 ```
 
-Angular only searches up the hierarchy, never down. Parent components cannot access services provided in child components.
+Angularは階層を上方向にのみ検索し、下方向には検索しません。親コンポーネントは、子コンポーネントで提供されたサービスにアクセスできません。
 
-**Solution:** Provide the service at a higher level (application or parent component).
+**解決策:** サービスをより上位のレベル（アプリケーションまたは親コンポーネント）で提供します。
 
 ```ts {prefer}
 import {Service} from '@angular/core';
@@ -50,11 +50,11 @@ export class DataStore {
 }
 ```
 
-TIP: `@Service` makes services available everywhere and enables tree-shaking. If you don't want to scope it to the entire app, specify `autoProvided: false`.
+TIP: `@Service`はサービスをどこからでも利用可能にし、ツリーシェイクを有効にします。アプリケーション全体にスコープしたくない場合は、`autoProvided: false`を指定してください。
 
-#### Services and lazy-loaded routes
+#### サービスと遅延読み込みルート {#services-and-lazy-loaded-routes}
 
-When you provide a service in a lazy-loaded route's `providers` array, Angular creates a child injector for that route. This injector and its services only become available after the route loads. Components in the eagerly-loaded parts of your application cannot access these services because they use different injectors that exist before the lazy-loaded injector is created.
+遅延読み込みルートの`providers`配列でサービスを提供すると、Angularはそのルート用の子インジェクターを作成します。このインジェクターとそのサービスは、ルートが読み込まれた後にのみ利用可能になります。アプリケーション内で即時読み込みされる部分のコンポーネントは、遅延読み込みインジェクターが作成される前から存在する別のインジェクターを使用するため、これらのサービスにアクセスできません。
 
 ```ts {header: 'feature.routes.ts'}
 import {Routes} from '@angular/router';
@@ -82,11 +82,11 @@ export class EagerView {
 }
 ```
 
-Lazy-loaded routes create child injectors that are only available after the route loads.
+遅延読み込みルートは、ルートの読み込み後にのみ利用できる子インジェクターを作成します。
 
-NOTE: By default, route injectors and their services persist even after navigating away from the route. They are not destroyed until the application is closed. For automatic cleanup of unused route injectors, see [customizing route behavior](guide/routing/customizing-route-behavior#experimental-automatic-cleanup-of-unused-route-injectors).
+NOTE: デフォルトでは、ルートインジェクターとそのサービスは、そのルートから離れた後も保持されます。これらはアプリケーションが閉じられるまで破棄されません。未使用のルートインジェクターの自動クリーンアップについては、[ルートの振る舞いのカスタマイズ](guide/routing/customizing-route-behavior#experimental-automatic-cleanup-of-unused-route-injectors)を参照してください。
 
-**Solution:** Use `@Service` for services that need to be shared across lazy boundaries.
+**解決策:** 遅延読み込みの境界をまたいで共有する必要があるサービスには、`@Service`を使用します。
 
 ```ts {prefer, header: 'Provide at root for shared services'}
 import {Service} from '@angular/core';
@@ -97,15 +97,15 @@ export class FeatureClient {
 }
 ```
 
-If the service should be lazy-loaded but still available to eager components, inject it only where needed and use optional injection to handle availability.
+サービスを遅延読み込みしつつ即時読み込みコンポーネントでも利用したい場合は、必要な場所でのみ注入し、オプション注入を使用して利用可否を扱います。
 
-### Multiple instances instead of singletons
+### シングルトンではなく複数のインスタンスになる {#multiple-instances-instead-of-singletons}
 
-You expect one shared instance (singleton) but get separate instances in different components.
+共有された1つのインスタンス（シングルトン）を期待しているのに、異なるコンポーネントで別々のインスタンスを取得してしまう場合があります。
 
-#### Providing in component instead of root
+#### ルートではなくコンポーネントで提供している {#providing-in-component-instead-of-root}
 
-When you add a service to a component's `providers` array, Angular creates a new instance of that service for each instance of the component. Each component gets its own separate service instance, which means changes in one component don't affect the service instance in other components. This is often unexpected when you want shared state across your application.
+コンポーネントの`providers`配列にサービスを追加すると、Angularはそのコンポーネントの各インスタンスごとにサービスの新しいインスタンスを作成します。各コンポーネントは独自の個別サービスインスタンスを取得するため、あるコンポーネントでの変更は他のコンポーネントのサービスインスタンスには影響しません。アプリケーション全体で状態を共有したい場合、これは多くの場合で想定外の挙動です。
 
 ```angular-ts {avoid, header: 'Component-level provider creates multiple instances'}
 import {Component, inject} from '@angular/core';
@@ -130,9 +130,9 @@ export class UserSettings {
 }
 ```
 
-Each component gets its own `UserClient` instance. Changes in one component don't affect the other.
+各コンポーネントは独自の`UserClient`インスタンスを取得します。あるコンポーネントでの変更は、もう一方には影響しません。
 
-**Solution:** Use `@Service` for singletons.
+**解決策:** シングルトンには`@Service`を使用します。
 
 ```ts {prefer, header: 'Root-level singleton'}
 import {Injectable} from '@angular/core';
@@ -143,9 +143,9 @@ export class UserClient {
 }
 ```
 
-#### When multiple instances are intentional
+#### 複数のインスタンスが意図的な場合 {#when-multiple-instances-are-intentional}
 
-Sometimes you want separate instances per component for component-specific state.
+コンポーネント固有の状態のために、コンポーネントごとに別々のインスタンスが必要な場合もあります。
 
 ```angular-ts {header: 'Intentional: Component-scoped state'}
 import {Injectable, signal} from '@angular/core';
@@ -173,19 +173,19 @@ export class UserForm {
 }
 ```
 
-This pattern is useful for:
+このパターンは次の用途に役立ちます。
 
-- Form state management (each form has isolated state)
-- Component-specific caching
-- Temporary data that shouldn't be shared
+- フォーム状態の管理（各フォームが分離された状態を持つ）
+- コンポーネント固有のキャッシュ
+- 共有すべきではない一時データ
 
-### Incorrect inject() usage
+### inject()の誤った使用 {#incorrect-inject-usage}
 
-The `inject()` function only works in specific contexts during class construction and factory execution.
+`inject()`関数は、クラスの構築中やファクトリの実行中など、特定のコンテキストでのみ機能します。
 
-#### Using inject() in lifecycle hooks
+#### ライフサイクルフックでinject()を使用する {#using-inject-in-lifecycle-hooks}
 
-When you call the `inject()` function inside lifecycle hooks like `ngOnInit()`, `ngAfterViewInit()`, or `ngOnDestroy()`, Angular throws an error because these methods run outside the injection context. The injection context is only available during the synchronous execution of class construction, which happens before lifecycle hooks are called.
+`ngOnInit()`、`ngAfterViewInit()`、`ngOnDestroy()`のようなライフサイクルフック内で`inject()`関数を呼び出すと、これらのメソッドは注入コンテキストの外で実行されるため、Angularはエラーをスローします。注入コンテキストは、ライフサイクルフックが呼び出される前に行われる、クラス構築の同期的な実行中にのみ利用できます。
 
 ```angular-ts {avoid, header: 'inject() in ngOnInit'}
 import {Component, inject} from '@angular/core';
@@ -205,7 +205,7 @@ export class UserProfile {
 }
 ```
 
-**Solution:** Capture dependencies and derive values in field initializers.
+**解決策:** 依存性を取得し、フィールド初期化子で値を派生させます。
 
 ```angular-ts {prefer, header: 'Derive values in field initializers'}
 import {Component, inject} from '@angular/core';
@@ -221,9 +221,9 @@ export class UserProfile {
 }
 ```
 
-#### Using the Injector for deferred injection
+#### 遅延注入にInjectorを使用する {#using-the-injector-for-deferred-injection}
 
-When you need to retrieve services outside an injection context, use the captured `Injector` directly with `injector.get()`:
+注入コンテキストの外でサービスを取得する必要がある場合は、取得済みの`Injector`を`injector.get()`で直接使用します。
 
 ```angular-ts
 import {Component, inject, Injector} from '@angular/core';
@@ -245,9 +245,9 @@ export class UserProfile {
 }
 ```
 
-#### Using runInInjectionContext for callbacks
+#### コールバックでrunInInjectionContextを使用する {#using-runininjectioncontext-for-callbacks}
 
-Use `runInInjectionContext()` when you need to enable **other code** to call `inject()`. This is useful when accepting callbacks that might use dependency injection:
+**他のコード**が`inject()`を呼び出せるようにする必要がある場合は、`runInInjectionContext()`を使用します。これは、依存性の注入を使用する可能性があるコールバックを受け取る場合に役立ちます。
 
 ```angular-ts
 import {Component, inject, Injector, input} from '@angular/core';
@@ -270,21 +270,21 @@ export class DataLoader {
 }
 ```
 
-The `runInInjectionContext()` method creates a temporary injection context, allowing code inside the callback to call `inject()`.
+`runInInjectionContext()`メソッドは一時的な注入コンテキストを作成し、コールバック内のコードが`inject()`を呼び出せるようにします。
 
-IMPORTANT: Always capture dependencies at the class level when possible. Use `injector.get()` for simple deferred retrieval, and `runInInjectionContext()` only when external code needs to call `inject()`.
+IMPORTANT: 可能な限り、常にクラスレベルで依存性を取得してください。単純な遅延取得には`injector.get()`を使用し、外部コードが`inject()`を呼び出す必要がある場合にのみ`runInInjectionContext()`を使用してください。
 
-TIP: Use `assertInInjectionContext()` to verify your code is running in a valid injection context. This is useful when creating reusable functions that call `inject()`. See [Asserting the context](guide/di/dependency-injection-context#asserts-the-context) for details.
+TIP: コードが有効な注入コンテキストで実行されていることを確認するには、`assertInInjectionContext()`を使用します。これは、`inject()`を呼び出す再利用可能な関数を作成するときに役立ちます。詳細は[コンテキストのアサート](guide/di/dependency-injection-context#asserts-the-context)を参照してください。
 
-### providers vs viewProviders confusion
+### providersとviewProvidersの混同 {#providers-vs-viewproviders-confusion}
 
-The difference between `providers` and `viewProviders` affects content projection scenarios.
+`providers`と`viewProviders`の違いは、コンテンツ投影のシナリオに影響します。
 
-#### Understanding the difference
+#### 違いを理解する {#understanding-the-difference}
 
-**providers:** Available to the component's template AND any content projected into the component (ng-content).
+**providers:** コンポーネントのテンプレートと、コンポーネントに投影された任意のコンテンツ（ng-content）の両方で利用できます。
 
-**viewProviders:** Only available to the component's template, NOT to projected content.
+**viewProviders:** コンポーネントのテンプレートでのみ利用でき、投影されたコンテンツでは利用できません。
 
 ```angular-ts {header: 'parent-view.ts'}
 import {Component, inject} from '@angular/core';
@@ -351,33 +351,33 @@ export class ChildView {
 export class App {}
 ```
 
-**When projected into `app-parent`:** The child component can inject `ThemeStore` because `providers` makes it available to projected content.
+**`app-parent`に投影された場合:** `providers`によって投影されたコンテンツで利用可能になるため、子コンポーネントは`ThemeStore`を注入できます。
 
-**When projected into `app-parent-view`:** The child component cannot inject `ThemeStore` because `viewProviders` restricts it to the parent's template only.
+**`app-parent-view`に投影された場合:** `viewProviders`が親のテンプレートのみに制限するため、子コンポーネントは`ThemeStore`を注入できません。
 
-#### Choosing between providers and viewProviders
+#### providersとviewProvidersの選択 {#choosing-between-providers-and-viewproviders}
 
-Use `providers` when:
+次の場合は`providers`を使用します。
 
-- The service should be available to projected content
-- You want content children to access the service
-- You're providing general-purpose services
+- サービスを投影されたコンテンツで利用可能にしたい
+- コンテンツ子にサービスへアクセスさせたい
+- 汎用サービスを提供している
 
-Use `viewProviders` when:
+次の場合は`viewProviders`を使用します。
 
-- The service should only be available to your component's template
-- You want to hide implementation details from projected content
-- You're providing internal services that shouldn't leak out
+- サービスをコンポーネントのテンプレートだけで利用可能にしたい
+- 投影されたコンテンツから実装の詳細を隠したい
+- 外部へ漏れるべきではない内部サービスを提供している
 
-**Default recommendation:** Use `providers` unless you have a specific reason to restrict access with `viewProviders`.
+**デフォルトの推奨:** `viewProviders`でアクセスを制限する具体的な理由がない限り、`providers`を使用してください。
 
-### InjectionToken issues
+### InjectionTokenの問題 {#injectiontoken-issues}
 
-When using `InjectionToken` for non-class dependencies, developers often encounter problems related to token identity, type safety, and provider configuration. These issues usually stem from how JavaScript handles object identity and how TypeScript infers types.
+クラス以外の依存性に`InjectionToken`を使用するとき、開発者はトークンの同一性、型安全性、プロバイダー構成に関する問題に遭遇することがよくあります。これらの問題は通常、JavaScriptがオブジェクト同一性を扱う方法と、TypeScriptが型を推論する方法に起因します。
 
-#### Token identity confusion
+#### トークン同一性の混乱 {#token-identity-confusion}
 
-When you create a new `InjectionToken` instance, JavaScript creates a unique object in memory. Even if you create another `InjectionToken` with the exact same description string, it's a completely different object. Angular uses the token object's identity (not its description) to match providers with injection points, so tokens with the same description but different object identities cannot access each other's values.
+新しい`InjectionToken`インスタンスを作成すると、JavaScriptはメモリ内に一意のオブジェクトを作成します。まったく同じ説明文字列を持つ別の`InjectionToken`を作成しても、それは完全に別のオブジェクトです。Angularはプロバイダーと注入ポイントを一致させるために、トークンオブジェクトの同一性（説明ではありません）を使用するため、同じ説明でもオブジェクト同一性が異なるトークンは互いの値にアクセスできません。
 
 ```ts {header: 'config.token.ts'}
 import {InjectionToken} from '@angular/core';
@@ -417,9 +417,9 @@ export class FeatureView {
 }
 ```
 
-Even though both tokens have the description `'app config'`, they are different objects. Angular compares tokens by reference, not by description.
+両方のトークンが`'app config'`という説明を持っていても、それらは異なるオブジェクトです。Angularは説明ではなく参照によってトークンを比較します。
 
-**Solution:** Import the same token instance.
+**解決策:** 同じトークンインスタンスをインポートします。
 
 ```angular-ts {prefer, header: 'feature-view.ts'}
 import {inject} from '@angular/core';
@@ -434,11 +434,11 @@ export class FeatureView {
 }
 ```
 
-TIP: Always export tokens from a shared file and import them everywhere they're needed. Never create multiple `InjectionToken` instances with the same description.
+TIP: 常に共有ファイルからトークンをエクスポートし、必要な場所すべてでそれをインポートしてください。同じ説明を持つ複数の`InjectionToken`インスタンスを作成しないでください。
 
-#### Trying to inject interfaces
+#### インターフェースを注入しようとする {#trying-to-inject-interfaces}
 
-When you define a TypeScript interface, it only exists during compilation for type checking. TypeScript erases all interface definitions when it compiles to JavaScript, so at runtime there's no object for Angular to use as an injection token. If you try to inject an interface type, Angular has nothing to match against the provider configuration.
+TypeScriptインターフェースを定義すると、それは型チェックのためにコンパイル中だけ存在します。TypeScriptはJavaScriptへコンパイルするときにすべてのインターフェース定義を消去するため、ランタイムにはAngularが注入トークンとして使用できるオブジェクトがありません。インターフェース型を注入しようとしても、Angularにはプロバイダー構成と照合する対象がありません。
 
 ```angular-ts {avoid, header: 'Can't inject interface'}
 interface UserConfig {
@@ -456,7 +456,7 @@ export class UserProfile {
 }
 ```
 
-**Solution:** Use `InjectionToken` for interface types.
+**解決策:** インターフェース型には`InjectionToken`を使用します。
 
 ```angular-ts {prefer, header: 'Use InjectionToken for interfaces'}
 import {InjectionToken, inject} from '@angular/core';
@@ -488,60 +488,60 @@ export class UserProfile {
 }
 ```
 
-The `InjectionToken` exists at runtime and can be used for injection, while the `UserConfig` interface provides type safety during development.
+`InjectionToken`はランタイムに存在し、注入に使用できます。一方、`UserConfig`インターフェースは開発中の型安全性を提供します。
 
-### Circular dependencies
+### 循環依存 {#circular-dependencies}
 
-Circular dependencies occur when services inject each other, creating a cycle that Angular cannot resolve. For detailed explanations and code examples, see [NG0200: Circular dependency](errors/NG0200).
+循環依存は、サービスが互いを注入し、Angularが解決できない循環を作る場合に発生します。詳細な説明とコード例については、[NG0200: Circular dependency](reference/errors/NG0200)を参照してください。
 
-**Resolution strategies** (in order of preference):
+**解決戦略**（推奨順）:
 
-1. **Restructure** - Extract shared logic to a third service, breaking the cycle
-2. **Use events** - Replace direct dependencies with event-based communication (such as `Subject`)
-3. **Lazy injection** - Use `Injector.get()` to defer one dependency (last resort)
+1. **再構成** - 共有ロジックを第3のサービスに抽出し、循環を断ち切ります
+2. **イベントを使用** - 直接の依存を、`Subject`などのイベントベースの通信に置き換えます
+3. **遅延注入** - `Injector.get()`を使用して一方の依存性を遅延させます（最後の手段）
 
-NOTE: Do not use `forwardRef()` for service circular dependencies—it only solves circular imports in standalone component configurations.
+NOTE: サービスの循環依存に`forwardRef()`を使用しないでください。これはスタンドアロンコンポーネント構成での循環インポートだけを解決します。
 
-## Debugging dependency resolution
+## 依存解決のデバッグ {#debugging-dependency-resolution}
 
-### Understanding the resolution process
+### 解決プロセスを理解する {#understanding-the-resolution-process}
 
-Angular resolves dependencies by walking up the injector hierarchy. When a `NullInjectorError` occurs, understanding this search order helps you identify where to add the missing provider.
+Angularはインジェクター階層を上にたどることで依存性を解決します。`NullInjectorError`が発生した場合、この検索順序を理解していると、不足しているプロバイダーをどこに追加すべきかを特定しやすくなります。
 
-Angular searches in this order:
+Angularは次の順序で検索します。
 
-1. **Element injector** - The current component or directive
-2. **Parent element injectors** - Up the DOM tree through parent components
-3. **Environment injector** - The route or application injector
-4. **NullInjector** - Throws `NullInjectorError` if not found
+1. **要素インジェクター** - 現在のコンポーネントまたはディレクティブ
+2. **親要素インジェクター** - 親コンポーネントを通じてDOMツリーを上にたどる
+3. **環境インジェクター** - ルートまたはアプリケーションのインジェクター
+4. **NullInjector** - 見つからない場合に`NullInjectorError`をスローします
 
-When you see a `NullInjectorError`, the service isn't provided at any level the component can access. Check that:
+`NullInjectorError`が表示された場合、そのサービスはコンポーネントがアクセスできるどのレベルでも提供されていません。次を確認してください。
 
-- The service has `@Service()` or
-- The service has `@Injectable({providedIn: 'root'})`, or
-- The service is in a `providers` array the component can reach
+- サービスに`@Service()`がある、または
+- サービスに`@Injectable({providedIn: 'root'})`がある、または
+- サービスがコンポーネントから到達できる`providers`配列に含まれている
 
-You can modify this search behavior with resolution modifiers like `self`, `skipSelf`, `host`, and `optional`. For complete coverage of resolution rules and modifiers, see the [Hierarchical injectors guide](guide/di/hierarchical-dependency-injection).
+この検索動作は、`self`、`skipSelf`、`host`、`optional`のような解決修飾子で変更できます。解決ルールと修飾子の完全な説明については、[階層型インジェクターガイド](guide/di/hierarchical-dependency-injection)を参照してください。
 
-### Using Angular DevTools
+### Angular DevToolsを使用する {#using-angular-devtools}
 
-Angular DevTools includes an injector tree inspector that visualizes the entire injector hierarchy and shows which providers are available at each level. For installation and general usage, see the [Angular DevTools injector documentation](tools/devtools/injectors).
+Angular DevToolsには、インジェクター階層全体を可視化し、各レベルで利用できるプロバイダーを表示するインジェクターツリーインスペクターが含まれています。インストールと一般的な使い方については、[Angular DevToolsインジェクタードキュメント](tools/devtools/injectors)を参照してください。
 
-When debugging DI issues, use DevTools to answer these questions:
+DIの問題をデバッグするときは、DevToolsを使用して次の問いに答えます。
 
-- **Is the service provided?** Select the component that fails to inject and check if the service appears in the Injector section.
-- **At what level?** Walk up the component tree to find where the service is actually provided (component, route, or application level).
-- **Multiple instances?** If a singleton service appears in multiple component injectors, it's likely provided in component `providers` arrays instead of using `@Service` or `providedIn: 'root'`.
+- **サービスは提供されていますか？** 注入に失敗しているコンポーネントを選択し、そのサービスがInjectorセクションに表示されるか確認します。
+- **どのレベルですか？** コンポーネントツリーを上にたどり、そのサービスが実際に提供されている場所（コンポーネント、ルート、アプリケーションレベル）を見つけます。
+- **複数のインスタンスですか？** シングルトンサービスが複数のコンポーネントインジェクターに表示される場合、`@Service`や`providedIn: 'root'`ではなく、コンポーネントの`providers`配列で提供されている可能性があります。
 
-If a service never appears in any injector, verify it has the `@Service` decorator or is listed in a `providers` array.
+サービスがどのインジェクターにも表示されない場合は、`@Service`デコレーターがあるか、`providers`配列に列挙されていることを確認します。
 
-### Logging and tracing injection
+### 注入のログ出力とトレース {#logging-and-tracing-injection}
 
-When DevTools isn't enough, use logging to trace injection behavior.
+DevToolsだけでは不十分な場合は、ログ出力を使用して注入の振る舞いをトレースします。
 
-#### Logging service creation
+#### サービス作成をログ出力する {#logging-service-creation}
 
-Add console logs to service constructors to see when services are created.
+サービスがいつ作成されるかを確認するには、サービスコンストラクターにコンソールログを追加します。
 
 ```ts
 import {Service} from '@angular/core';
@@ -559,17 +559,17 @@ export class UserClient {
 }
 ```
 
-When the service is created, you'll see the log message and a stack trace showing where the injection occurred.
+サービスが作成されると、ログメッセージと、注入がどこで発生したかを示すスタックトレースが表示されます。
 
-**What to look for:**
+**確認すべきこと:**
 
-- How many times is the constructor called? (should be once for singletons)
-- Where in the code is it being injected? (check the stack trace)
-- Is it created at the expected time? (application startup vs lazy)
+- コンストラクターは何回呼び出されていますか？（シングルトンなら1回のはずです）
+- コード内のどこで注入されていますか？（スタックトレースを確認します）
+- 期待したタイミングで作成されていますか？（アプリケーション起動時、または遅延時）
 
-#### Checking service availability
+#### サービスの利用可否を確認する {#checking-service-availability}
 
-Use optional injection with logging to determine if a service is available.
+サービスが利用可能かどうかを判断するには、ログ出力とともにオプション注入を使用します。
 
 ```angular-ts
 import {Component, inject} from '@angular/core';
@@ -593,11 +593,11 @@ export class DebugView {
 }
 ```
 
-This pattern helps you verify if a service is available without crashing the application.
+このパターンにより、アプリケーションをクラッシュさせずにサービスが利用可能かを確認できます。
 
-#### Logging resolution modifiers
+#### 解決修飾子をログ出力する {#logging-resolution-modifiers}
 
-Test different resolution strategies with logging.
+ログ出力を使って、異なる解決戦略をテストします。
 
 ```angular-ts
 import {Component, inject} from '@angular/core';
@@ -626,65 +626,65 @@ export class DebugView {
 }
 ```
 
-This shows you which instances are available at different injector levels.
+これにより、異なるインジェクターレベルでどのインスタンスが利用可能かがわかります。
 
-### Debugging workflow
+### デバッグワークフロー {#debugging-workflow}
 
-When DI fails, follow this systematic approach:
+DIが失敗した場合は、次の体系的なアプローチに従います。
 
-**Step 1: Read the error message**
+**ステップ1: エラーメッセージを読む**
 
-- Identify the error code (NG0200, NG0203, etc.)
-- Read the dependency path
-- Note which token failed
+- エラーコード（NG0200、NG0203など）を特定する
+- 依存パスを読む
+- どのトークンが失敗したかを確認する
 
-**Step 2: Check the basics**
+**ステップ2: 基本を確認する**
 
-- Does the service have `@Service` or `@Injectable()`?
-- If you use `@Injectable`, is `providedIn` set correctly?
-- Are imports correct?
-- Is the file included in compilation?
+- サービスに`@Service`または`@Injectable()`がありますか？
+- `@Injectable`を使用している場合、`providedIn`は正しく設定されていますか？
+- インポートは正しいですか？
+- ファイルはコンパイル対象に含まれていますか？
 
-**Step 3: Verify injection context**
+**ステップ3: 注入コンテキストを確認する**
 
-- Is `inject()` called in a valid context?
-- Check for async issues (await, setTimeout, promises)
-- Verify timing (not after destroy)
+- `inject()`は有効なコンテキストで呼び出されていますか？
+- 非同期の問題（await、setTimeout、promise）を確認する
+- タイミングを確認する（破棄後ではないか）
 
-**Step 4: Use debugging tools**
+**ステップ4: デバッグツールを使用する**
 
-- Open Angular DevTools
-- Check injector hierarchy
-- Add console logs to constructors
-- Use optional injection to test availability
+- Angular DevToolsを開く
+- インジェクター階層を確認する
+- コンストラクターにコンソールログを追加する
+- オプション注入を使用して利用可否をテストする
 
-**Step 5: Simplify and isolate**
+**ステップ5: 単純化して切り分ける**
 
-- Remove dependencies one by one
-- Test in a minimal component
-- Check each injector level separately
-- Create a reproduction case
+- 依存性を1つずつ削除する
+- 最小限のコンポーネントでテストする
+- 各インジェクターレベルを個別に確認する
+- 再現ケースを作成する
 
-## DI error reference
+## DIエラーリファレンス {#di-error-reference}
 
-This section provides detailed information about specific Angular DI error codes you may encounter. Use this as a reference when you see these errors in your console.
+このセクションでは、遭遇する可能性のある特定のAngular DIエラーコードについて詳しく説明します。コンソールでこれらのエラーを見たときのリファレンスとして使用してください。
 
-### NullInjectorError: No provider for [Service]
+### NullInjectorError: No provider for [Service] {#nullinjectorerror-no-provider-for-service}
 
-**Error code:** None (displayed as `NullInjectorError`)
+**エラーコード:** なし（`NullInjectorError`として表示されます）
 
-This error occurs when Angular cannot find a provider for a token in the injector hierarchy. The error message includes a dependency path showing where the injection was attempted.
+このエラーは、Angularがインジェクター階層内でトークンのプロバイダーを見つけられない場合に発生します。エラーメッセージには、どこで注入が試行されたかを示す依存パスが含まれます。
 
 ```
 NullInjectorError: No provider for UserClient!
   Dependency path: App -> AuthClient -> UserClient
 ```
 
-The dependency path shows that `App` injected `AuthClient`, which tried to inject `UserClient`, but no provider was found.
+依存パスは、`App`が`AuthClient`を注入し、それが`UserClient`を注入しようとしたものの、プロバイダーが見つからなかったことを示しています。
 
-#### Missing the `@Service ` or `@Injectable` decorator
+#### `@Service`または`@Injectable`デコレーターがない {#missing-the-service-or-injectable-decorator}
 
-The most common cause is forgetting the `@Service` or `@Injectable()` decorator on a service class.
+もっとも一般的な原因は、サービスクラスに`@Service`または`@Injectable()`デコレーターを付け忘れることです。
 
 ```ts {avoid, header: 'Missing decorator'}
 export class UserClient {
@@ -694,7 +694,7 @@ export class UserClient {
 }
 ```
 
-Angular requires the `@Service()` decorator to generate the metadata needed for dependency injection.
+Angularでは、依存性の注入に必要なメタデータを生成するために`@Service()`デコレーターが必要です。
 
 ```ts {prefer, header: 'Include @Service'}
 import {Service} from '@angular/core';
@@ -707,11 +707,11 @@ export class UserClient {
 }
 ```
 
-NOTE: Classes with zero-argument constructors can work without `@Service()`, but this is not recommended. Always include the decorator for consistency and to avoid issues when adding dependencies later.
+NOTE: 引数なしコンストラクターを持つクラスは`@Service()`なしでも動作することがありますが、これは推奨されません。一貫性を保ち、後で依存性を追加したときの問題を避けるため、常にデコレーターを含めてください。
 
-#### Missing providedIn configuration
+#### providedIn構成がない {#missing-providedin-configuration}
 
-A service may have `@Injectable()` but not specify where it should be provided.
+サービスに`@Injectable()`があっても、どこで提供されるべきかを指定していない場合があります。
 
 ```ts {avoid, header: 'No providedIn specified'}
 import {Injectable} from '@angular/core';
@@ -724,7 +724,7 @@ export class UserClient {
 }
 ```
 
-Use the `@Service` decorator to make the service available throughout your application.
+アプリケーション全体でサービスを利用可能にするには、`@Service`デコレーターを使用します。
 
 ```ts {prefer, header: 'Specify providedIn'}
 import {Service} from '@angular/core';
@@ -737,11 +737,11 @@ export class UserClient {
 }
 ```
 
-The `@Service` decorator makes the service available application-wide and enables tree-shaking (the service is removed from the bundle if never injected).
+`@Service`デコレーターはサービスをアプリケーション全体で利用可能にし、ツリーシェイクを有効にします（サービスが一度も注入されない場合はバンドルから削除されます）。
 
-#### Standalone component missing imports
+#### スタンドアロンコンポーネントのインポート不足 {#standalone-component-missing-imports}
 
-In Angular v20+ with standalone components, you must explicitly import or provide dependencies in each component.
+Angular v20以降のスタンドアロンコンポーネントでは、各コンポーネントで依存性を明示的にインポートまたは提供する必要があります。
 
 ```angular-ts {avoid, header: 'Missing service import'}
 import {Component, inject} from '@angular/core';
@@ -757,7 +757,7 @@ export class UserProfile {
 }
 ```
 
-Ensure the service uses `@Service` or add it to the component's `providers` array.
+サービスが`@Service`を使用していることを確認するか、コンポーネントの`providers`配列に追加してください。
 
 ```angular-ts {prefer, header: 'Service uses providedIn: root'}
 import {Component, inject} from '@angular/core';
@@ -773,27 +773,27 @@ export class UserProfile {
 }
 ```
 
-#### Debugging with the dependency path
+#### 依存パスでデバッグする {#debugging-with-the-dependency-path}
 
-The dependency path in the error message shows the chain of injections that led to the failure.
+エラーメッセージ内の依存パスは、失敗につながった注入の連鎖を示します。
 
 ```
 NullInjectorError: No provider for LoggerStore!
   Dependency path: App -> DataStore -> ApiClient -> LoggerStore
 ```
 
-This path tells you:
+このパスから次のことがわかります。
 
-1. `App` injected `DataStore`
-2. `DataStore` injected `ApiClient`
-3. `ApiClient` tried to inject `LoggerStore`
-4. No provider for `LoggerStore` was found
+1. `App`が`DataStore`を注入しました
+2. `DataStore`が`ApiClient`を注入しました
+3. `ApiClient`が`LoggerStore`を注入しようとしました
+4. `LoggerStore`のプロバイダーが見つかりませんでした
 
-Start your investigation at the end of the chain (`LoggerStore`) and verify it has proper configuration.
+連鎖の末尾（`LoggerStore`）から調査を開始し、適切に構成されていることを確認します。
 
-#### Checking provider availability with optional injection
+#### オプション注入でプロバイダーの利用可否を確認する {#checking-provider-availability-with-optional-injection}
 
-Use optional injection to check if a provider exists without throwing an error.
+エラーをスローせずにプロバイダーが存在するかを確認するには、オプション注入を使用します。
 
 ```angular-ts
 import {Component, inject} from '@angular/core';
@@ -809,13 +809,13 @@ export class DebugView {
 }
 ```
 
-Optional injection returns `null` if no provider is found, allowing you to handle the absence gracefully.
+オプション注入はプロバイダーが見つからない場合に`null`を返すため、不在を穏やかに処理できます。
 
-### NG0203: inject() must be called from an injection context
+### NG0203: inject() must be called from an injection context {#ng0203-inject-must-be-called-from-an-injection-context}
 
-**Error code:** NG0203
+**エラーコード:** NG0203
 
-This error occurs when you call `inject()` outside of a valid injection context. Angular requires `inject()` to be called synchronously during class construction or factory execution.
+このエラーは、有効な注入コンテキストの外で`inject()`を呼び出した場合に発生します。Angularでは、`inject()`はクラスの構築中またはファクトリの実行中に同期的に呼び出される必要があります。
 
 ```
 NG0203: inject() must be called from an injection context such as a
@@ -823,11 +823,11 @@ constructor, a factory function, a field initializer, or a function
 used with `runInInjectionContext`.
 ```
 
-#### Valid injection contexts
+#### 有効な注入コンテキスト {#valid-injection-contexts}
 
-Angular allows `inject()` in these locations:
+Angularは次の場所で`inject()`を許可します。
 
-1. **Class field initializers**
+1. **クラスフィールド初期化子**
 
    ```angular-ts
    import {Component, inject} from '@angular/core';
@@ -843,7 +843,7 @@ Angular allows `inject()` in these locations:
    }
    ```
 
-2. **Class constructor**
+2. **クラスコンストラクター**
 
    ```angular-ts
    import {Component, inject} from '@angular/core';
@@ -864,7 +864,7 @@ Angular allows `inject()` in these locations:
    }
    ```
 
-3. **Provider factory functions**
+3. **プロバイダーファクトリ関数**
 
    ```ts
    import {inject, InjectionToken} from '@angular/core';
@@ -879,7 +879,7 @@ Angular allows `inject()` in these locations:
    });
    ```
 
-4. **Inside runInInjectionContext()**
+4. **runInInjectionContext()の内側**
 
    ```angular-ts
    import {Component, inject, Injector} from '@angular/core';
@@ -901,33 +901,33 @@ Angular allows `inject()` in these locations:
    }
    ```
 
-Other injection contexts that `inject()` also works in include:
+`inject()`が機能するその他の注入コンテキストには、次のものも含まれます。
 
 - [provideAppInitializer](api/core/provideAppInitializer)
 - [provideEnvironmentInitializer](api/core/provideEnvironmentInitializer)
-- Functional [route guards](guide/routing/route-guards)
-- Functional [data resolvers](guide/routing/data-resolvers)
+- 関数型の[ルートガード](guide/routing/route-guards)
+- 関数型の[データリゾルバー](guide/routing/data-resolvers)
 
-#### When this error occurs
+#### このエラーが発生する場合 {#when-this-error-occurs}
 
-This error occurs when:
+このエラーは次の場合に発生します。
 
-- Calling `inject()` in lifecycle hooks (`ngOnInit`, `ngAfterViewInit`, etc.)
-- Calling `inject()` after `await` in async functions
-- Calling `inject()` in callbacks (`setTimeout`, `Promise.then()`, etc.)
-- Calling `inject()` outside of class construction phase
+- ライフサイクルフック（`ngOnInit`、`ngAfterViewInit`など）で`inject()`を呼び出す
+- 非同期の関数内で`await`の後に`inject()`を呼び出す
+- コールバック（`setTimeout`、`Promise.then()`など）内で`inject()`を呼び出す
+- クラス構築フェーズの外で`inject()`を呼び出す
 
-See the "Incorrect inject() usage" section for detailed examples and solutions.
+詳細な例と解決策については、「inject()の誤った使用」セクションを参照してください。
 
-#### Solutions and workarounds
+#### 解決策と回避策 {#solutions-and-workarounds}
 
-**Solution 1:** Capture dependencies in field initializers (most common)
+**解決策1:** フィールド初期化子で依存性を取得する（もっとも一般的）
 
 ```ts
 private userService = inject(UserClient) // Capture at class level
 ```
 
-**Solution 2:** Use `runInInjectionContext()` for callbacks
+**解決策2:** コールバックには`runInInjectionContext()`を使用する
 
 ```ts
 private injector = inject(Injector)
@@ -939,7 +939,7 @@ someCallback() {
 }
 ```
 
-**Solution 3:** Pass dependencies as parameters instead of injecting them
+**解決策3:** 依存性を注入する代わりにパラメーターとして渡す
 
 ```ts
 // Instead of injecting inside a callback
@@ -955,61 +955,61 @@ setTimeout(() => {
 }, 1000)
 ```
 
-### NG0200: Circular dependency detected
+### NG0200: Circular dependency detected {#ng0200-circular-dependency-detected}
 
-**Error code:** NG0200
+**エラーコード:** NG0200
 
-This error occurs when two or more services depend on each other, creating a circular dependency that Angular cannot resolve.
+このエラーは、2つ以上のサービスが互いに依存し、Angularが解決できない循環依存を作る場合に発生します。
 
 ```
 NG0200: Circular dependency in DI detected for AuthClient
   Dependency path: AuthClient -> UserClient -> AuthClient
 ```
 
-The dependency path shows the cycle: `AuthClient` depends on `UserClient`, which depends back on `AuthClient`.
+依存パスは循環を示しています。`AuthClient`は`UserClient`に依存し、後者は`AuthClient`に依存し返しています。
 
-#### Understanding the error
+#### エラーを理解する {#understanding-the-error}
 
-Angular creates service instances by calling their constructors and injecting dependencies. When services depend on each other circularly, Angular cannot determine which to create first.
+Angularはコンストラクターを呼び出して依存性を注入することで、サービスインスタンスを作成します。サービスが互いに循環的に依存している場合、Angularはどちらを先に作成すべきか判断できません。
 
-#### Common causes
+#### 一般的な原因 {#common-causes}
 
-- Direct circular dependency (Service A → Service B → Service A)
-- Indirect circular dependency (Service A → Service B → Service C → Service A)
-- Import cycles in module files that also have service dependencies
+- 直接的な循環依存（Service A → Service B → Service A）
+- 間接的な循環依存（Service A → Service B → Service C → Service A）
+- サービス依存性も持つモジュールファイル内のインポート循環
 
-#### Resolution strategies
+#### 解決戦略 {#resolution-strategies}
 
-See the "Circular dependencies" section for detailed examples and solutions:
+詳細な例と解決策については、「循環依存」セクションを参照してください。
 
-1. **Restructure** - Extract shared logic to a third service (recommended)
-2. **Use events** - Replace direct dependencies with event-based communication
-3. **Lazy injection** - Use `Injector.get()` to defer one dependency (last resort)
+1. **再構成** - 共有ロジックを第3のサービスに抽出します（推奨）
+2. **イベントを使用** - 直接の依存をイベントベースの通信に置き換えます
+3. **遅延注入** - `Injector.get()`を使用して一方の依存性を遅延させます（最後の手段）
 
-Do NOT use `forwardRef()` for service circular dependencies. It only solves circular imports in component configurations.
+サービスの循環依存に`forwardRef()`を使用しないでください。これはコンポーネント構成内の循環インポートだけを解決します。
 
-### Other DI error codes
+### その他のDIエラーコード {#other-di-error-codes}
 
-For detailed explanations and solutions for these errors, see the [Angular error reference](errors):
+これらのエラーの詳細な説明と解決策については、[Angularエラーリファレンス](reference/errors/overview)を参照してください。
 
-| Error Code              | Description                                                                                |
+| エラーコード            | 説明                                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------------ |
-| [NG0204](errors/NG0204) | Can't resolve all parameters - missing `@Injectable()` decorator                           |
-| [NG0205](errors/NG0205) | Injector already destroyed - accessing services after component destruction                |
-| [NG0207](errors/NG0207) | EnvironmentProviders in wrong context - using `provideHttpClient()` in component providers |
+| [NG0204](reference/errors/NG0204) | すべてのパラメーターを解決できません - `@Injectable()`デコレーターがありません            |
+| [NG0205](reference/errors/NG0205) | インジェクターはすでに破棄されています - コンポーネント破棄後にサービスへアクセスしています |
+| [NG0207](reference/errors/NG0207) | EnvironmentProvidersが誤ったコンテキストにあります - コンポーネントプロバイダーで`provideHttpClient()`を使用しています |
 
-## Next steps
+## 次のステップ {#next-steps}
 
-When you encounter DI errors, remember to:
+DIエラーに遭遇したら、次のことを意識してください。
 
-1. Read the error message and dependency path carefully
-2. Verify basic configuration (decorators, `providedIn`, imports)
-3. Check injection context and timing
-4. Use DevTools and logging to investigate
-5. Simplify and isolate the problem
+1. エラーメッセージと依存パスを注意深く読む
+2. 基本構成（デコレーター、`providedIn`、インポート）を確認する
+3. 注入コンテキストとタイミングを確認する
+4. DevToolsとログ出力を使用して調査する
+5. 問題を単純化して切り分ける
 
-For a deeper understanding of specific topics on dependency injection, check out:
+依存性の注入に関する特定のトピックをより深く理解するには、次を確認してください。
 
-- [Understanding dependency injection](guide/di) - Core DI concepts and patterns
-- [Hierarchical dependency injection](guide/di/hierarchical-dependency-injection) - How the injector hierarchy works
-- [Testing with dependency injection](guide/testing) - Using TestBed and mocking dependencies
+- [依存性の注入を理解する](guide/di) - DIの中心概念とパターン
+- [階層型依存性の注入](guide/di/hierarchical-dependency-injection) - インジェクター階層の仕組み
+- [依存性の注入によるテスト](guide/testing) - TestBedの使用と依存性のモック化
