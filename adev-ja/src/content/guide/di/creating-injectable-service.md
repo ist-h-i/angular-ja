@@ -147,5 +147,5 @@ export class HeroService {
 
 <docs-pill-row>
   <docs-pill href="guide/di/defining-dependency-providers" title="依存性プロバイダーの構成"/>
-  <docs-pill href="guide/di/defining-dependency-providers#automatic-provision-for-non-class-dependencies" title="`InjectionToken`"/>
+  <docs-pill href="guide/di/defining-dependency-providers" title="`InjectionToken`"/>
 </docs-pill-row>

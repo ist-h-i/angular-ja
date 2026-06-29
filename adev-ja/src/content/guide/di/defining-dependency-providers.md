@@ -7,7 +7,7 @@ Angular provides two ways to make services available for injection:
 
 In the [previous guide](/guide/di/creating-and-using-services), you learned how to create services using `providedIn: 'root'`, which handles most common use cases. This guide explores additional patterns for both automatic and manual provider configuration.
 
-## Automatic provision for non-class dependencies {#automatic-provision-for-non-class-dependencies}
+## Automatic provision for non-class dependencies
 
 While the `@Injectable` decorator with `providedIn: 'root'` works great for services (classes), you might need to provide other types of values globally - like configuration objects, functions, or primitive values. Angular provides `InjectionToken` for this purpose.
 
