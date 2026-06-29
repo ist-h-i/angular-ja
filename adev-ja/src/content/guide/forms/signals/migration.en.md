@@ -1,23 +1,23 @@
-# 既存フォームをシグナルフォームへ移行する
+# Migrating existing forms to Signal Forms
 
-このガイドでは、既存のリアクティブフォームとの相互運用性に焦点を当てて、既存のコードベースをシグナルフォームへ
-移行するための戦略を説明します。
+This guide provides strategies for migrating existing codebases to Signal Forms, focusing on interoperability with
+existing Reactive Forms.
 
-## `compatForm` を使ったトップダウン移行 {#top-down-migration-using-compatform}
+## Top-down migration using `compatForm`
 
-既存のリアクティブ `FormControl` インスタンスをシグナルフォーム内で使いたい場合があります。これは、次のような
-コントロールに役立ちます。
+Sometimes you may want to use existing reactive `FormControl` instances within a Signal Form. This is useful for
+controls that involve:
 
-- 複雑な非同期ロジック。
-- まだ移植されていない入り組んだRxJS演算子。
-- 既存のサードパーティライブラリとの統合。
+- Complex asynchronous logic.
+- Intricate RxJS operators that are not yet ported.
+- Integration with existing third-party libraries.
 
-### `FormControl` をシグナルフォームに統合する {#integrating-a-formcontrol-into-a-signal-form}
+### Integrating a `FormControl` into a signal form
 
-特殊な `enterprisePasswordValidator` を使う既存の `passwordControl` を考えてみましょう。
-バリデーターを書き直す代わりに、そのコントロールをシグナル状態に橋渡しできます。
+Consider an existing `passwordControl` that uses a specialized `enterprisePasswordValidator`. Instead of rewriting the
+validator, you can bridge the control into your signal state.
 
-これは `compatForm` を使って実現できます。
+We can do it using `compatForm`:
 
 ```typescript
 import {signal} from '@angular/core';
@@ -48,7 +48,7 @@ const isPasswordValid = f.password().valid();
 const passwordErrors = f.password().errors(); // Returns CompatValidationError if the existing validator fails
 ```
 
-テンプレートでは、基盤となるコントロールをバインドして標準のリアクティブ構文を使います。
+In the template, use standard reactive syntax by binding the underlying control:
 
 ```angular-html
 <form novalidate>
@@ -81,10 +81,10 @@ const passwordErrors = f.password().errors(); // Returns CompatValidationError i
   <docs-code header="app.html" path="adev/src/content/examples/signal-forms/src/compat-form-control-integration/app/app.html"/>
 </docs-code-multifile>
 
-### `FormGroup` をシグナルフォームに統合する {#integrating-a-formgroup-into-a-signal-form}
+### Integrating a `FormGroup` into a signal form
 
-`FormGroup` 全体もラップできます。これは、フォーム内の再利用可能なサブセクション、たとえば
-**住所ブロック** が既存のリアクティブフォームでまだ管理されている場合によく使われます。
+You can also wrap an entire `FormGroup`. This is common when a reusable sub-section of a form—such as an
+**Address Block**—is still managed by existing Reactive Forms.
 
 ```typescript
 import {signal} from '@angular/core';
@@ -109,8 +109,8 @@ const f = compatForm(checkoutModel, (p) => {
 });
 ```
 
-`shippingAddress` フィールドは、シグナルフォームツリー内の分岐として機能します。テンプレートでは、`.control()` を通じて
-基盤となる既存のコントロールへアクセスし、これらのネストされたコントロールをバインドできます。
+The `shippingAddress` field acts as a branch in your Signal Form tree. You can bind these nested controls in your
+template by accessing the underlying existing controls via `.control()`:
 
 ```angular-html
 <form novalidate>
@@ -179,9 +179,9 @@ const f = compatForm(checkoutModel, (p) => {
   <docs-code header="app.html" path="adev/src/content/examples/signal-forms/src/compat-form-group-integration/app/app.html"/>
 </docs-code-multifile>
 
-### 値へのアクセス {#accessing-values}
+### Accessing values
 
-`compatForm` は `FormControl` レベルの値アクセスをプロキシしますが、フォーム全体の値はコントロールを保持します。
+While `compatForm` proxies value access on the `FormControl` level, the full form value preserves the control:
 
 ```typescript
 const passwordControl = new FormControl('password' /** ... */);
@@ -196,7 +196,7 @@ form.password().value(); // 'password'
 form().value(); // { email: '', password: FormControl}
 ```
 
-フォーム全体の値が必要な場合は、手動で構築する必要があります。
+If you need the whole form value, you'd have to build it manually:
 
 ```typescript
 const formValue = computed(() => ({
@@ -205,12 +205,12 @@ const formValue = computed(() => ({
 })); // {email: '', password: ''}
 ```
 
-## ボトムアップ移行 {#bottom-up-migration}
+## Bottom-up migration
 
-### シグナルフォームを `FormGroup` に統合する {#integrating-a-signal-form-into-a-formgroup}
+### Integrating a Signal Form into a `FormGroup`
 
-`SignalFormControl` を使うと、シグナルベースのフォームを標準の `FormControl` として公開できます。これは、親の `FormGroup`
-構造を維持したまま、フォームのリーフノードをシグナルへ移行したい場合に役立ちます。
+You can use `SignalFormControl` to expose a signal-based form as a standard `FormControl`. This is useful when you want
+to migrate leaf nodes of a form to Signals while keeping the parent `FormGroup` structure.
 
 ```typescript
 import {Component, signal} from '@angular/core';
@@ -235,9 +235,9 @@ export class UserProfile {
 }
 ```
 
-`SignalFormControl` は、**シグナルフォーム** システムと **リアクティブフォーム** システムの間で値を双方向に同期します。
+The `SignalFormControl` synchronizes values bi-directionally between the **Signal Forms** system and the **Reactive Forms** system:
 
-- **シグナル -> リアクティブ**: シグナルフォーム経由で値を更新すると、リアクティブフォームのコントロールが即座に更新されます。
+- **Signal -> Reactive**: Updating the value via Signal Forms updates the Reactive Form control immediately.
 
 ```typescript
 // Signal Forms update
@@ -247,7 +247,7 @@ this.emailControl.fieldTree().value.set('new@example.com');
 console.log(this.form.value); // {email: 'new@example.com'}
 ```
 
-- **リアクティブ -> シグナル**: 親の `FormGroup` 経由で値を更新すると、シグナルフォームの状態が更新されます。
+- **Reactive -> Signal**: Updating the value via the parent `FormGroup` updates the Signal Forms state.
 
 ```typescript
 // Reactive Forms update
@@ -257,9 +257,9 @@ this.form.patchValue({email: 'other@example.com'});
 console.log(this.emailControl.fieldTree().value()); // 'other@example.com'
 ```
 
-### `SignalFormControl` のバインド {#binding-signalformcontrol}
+### Binding `SignalFormControl`
 
-`FormGroup` 内で `SignalFormControl` を使うには、コントロールとして渡し、テンプレートでは `.fieldTree` を使ってバインドします。
+To use `SignalFormControl` in a `FormGroup`, pass it as a control and bind it in the template using `.fieldTree`:
 
 ```typescript
 readonly emailControl = new SignalFormControl('', (p) => { required(p); });
@@ -286,11 +286,11 @@ readonly form = new FormGroup({
 <input [formControl]="emailControl" />
 ```
 
-### `SignalFormControl` がシグナルではなく値を受け取る理由 {#why-signalformcontrol-takes-a-value-instead-of-a-signal}
+### Why `SignalFormControl` takes a value instead of a signal
 
-標準のシグナルフォームでは、シグナルを渡してフォームを作成します: `form(mySignal)`。
+In standard Signal Forms, you create a form by passing a signal: `form(mySignal)`.
 
-しかし、`SignalFormControl` は最初の引数として、文字列やオブジェクトのような **生の値** を受け取ります。
+However, `SignalFormControl` takes a **raw value** (like a string or object) as its first argument:
 
 ```typescript
 // Takes a raw value, not a signal
@@ -299,20 +299,20 @@ const userControl = new SignalFormControl({
 });
 ```
 
-`SignalFormControl` は内部でシグナルを作成し、書き込みをインターセプトして、リアクティブフォームが期待する **同期更新** をトリガーします。
+`SignalFormControl` creates the signal internally to intercept writes and trigger the **synchronous updates** expected by Reactive Forms.
 
-内部のシグナルには `.sourceValue` 経由で引き続きアクセスできます。
+You can still access the internal signal via `.sourceValue`:
 
 ```typescript
 const value = userControl.sourceValue();
 ```
 
-### コントロールの無効化/有効化 {#disabling-enabling-control}
+### Disabling/Enabling control
 
-有効/無効状態を変更する命令型API（`enable()`、`disable()` など）は、`SignalFormControl` では意図的にサポートされていません。
-これは、コントロールの状態がシグナル状態とルールから導出されるべきだからです。
+Imperative APIs for changing the enabled/disabled state (like `enable()`, `disable()`) are intentionally not supported
+in `SignalFormControl`. This is because the state of the control should be derived from the signal state and rules.
 
-disable/enableを呼び出そうとするとエラーが投げられます。
+Attempting to call disable/enable would throw an error.
 
 ```typescript {avoid}
 import {signal, effect} from '@angular/core';
@@ -335,7 +335,7 @@ export class UserProfile {
 }
 ```
 
-代わりに、disabledルールを使います。
+Instead, use disabled rule:
 
 ```typescript {prefer}
 import {signal} from '@angular/core';
@@ -358,12 +358,12 @@ export class UserProfile {
 }
 ```
 
-### 動的な操作 {#dynamic-manipulation}
+### Dynamic manipulation
 
-バリデーターを追加または削除する命令型API（`addValidators()`、`removeValidators()`、`setValidators()` など）は、
-`SignalFormControl` では意図的にサポートされていません。
+Imperative APIs for adding or removing validators (like `addValidators()`, `removeValidators()`, `setValidators()`) are
+intentionally not supported in `SignalFormControl`.
 
-これらのメソッドを呼び出そうとするとエラーが投げられます。
+Attempting to call these methods will throw an error.
 
 ```typescript {avoid}
 export class UserProfile {
@@ -382,7 +382,7 @@ export class UserProfile {
 }
 ```
 
-代わりに、`applyWhen` ルールを使ってバリデーターを条件付きで適用します。
+Instead, use `applyWhen` rule to conditionally apply validators:
 
 ```typescript {prefer}
 import {signal} from '@angular/core';
@@ -405,18 +405,18 @@ export class UserProfile {
 }
 ```
 
-### 手動エラー選択 {#manual-error-selection}
+### Manual Error Selection
 
-`setErrors()` メソッドと `markAsPending()` メソッドはサポートされていません。シグナルフォームでは、エラーはバリデーション
-ルールと非同期バリデーションの状態から導出されます。エラーを報告する必要がある場合は、スキーマ内のバリデーションルールを通じて
-宣言的に行うべきです。
+The `setErrors()` and `markAsPending()` methods are not supported. In Signal Forms, errors are derived from validation
+rules and async validation status. If you need to report an error, it should be done declaratively via a validation rule
+in the schema.
 
-## 自動ステータスクラス {#automatic-status-classes}
+## Automatic status classes
 
-リアクティブ/テンプレートフォームは、コントロール状態をスタイリングしやすくするために、[class 属性](/guide/forms/template-driven-forms#track-control-states)（
-`.ng-valid` や `.ng-dirty` など）を自動的に追加します。シグナルフォームはそれを行いません。
+Reactive/Template Forms automatically adds [class attributes](/guide/forms/template-driven-forms#track-control-states) (
+such as `.ng-valid` or `.ng-dirty`) to facilitate styling control states. Signal Forms does not do that.
 
-この振る舞いを保持したい場合は、`NG_STATUS_CLASSES` プリセットを提供できます。
+If you want to preserve this behavior, you can provide the `NG_STATUS_CLASSES` preset:
 
 ```typescript
 import {provideSignalFormsConfig} from '@angular/forms/signals';
@@ -431,7 +431,7 @@ bootstrapApplication(App, {
 });
 ```
 
-必要なクラスを独自のロジックに基づいて適用するために、独自のカスタム設定も提供できます。
+You can also provide your own custom configuration to apply whatever classes you wish based on you custom logic:
 
 ```typescript
 import {provideSignalFormsConfig} from '@angular/forms/signals';
