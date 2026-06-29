@@ -1,20 +1,20 @@
-# Adding form logic
+# フォームロジックの追加
 
-Signal Forms allow you to add logic to your form using schemas. Validation logic is covered in the [Validation guide](guide/forms/signals/validation), and this guide discusses other rules available in schemas. You can disable fields conditionally, hide them based on other values, make them readonly, debounce user input, and attach metadata for custom controls.
+シグナルフォームでは、スキーマを使ってフォームにロジックを追加できます。バリデーションロジックは[バリデーションガイド](guide/forms/signals/validation)で扱い、このガイドではスキーマで利用できるその他のルールについて説明します。フィールドを条件付きで無効化したり、他の値に基づいて非表示にしたり、読み取り専用にしたり、ユーザー入力をデバウンスしたり、カスタムコントロール用のメタデータを付与したりできます。
 
-This guide shows you how to use rules like `disabled()`, `hidden()`, `readonly()`, `debounce()`, and `metadata()` to control field behavior.
+このガイドでは、`disabled()`、`hidden()`、`readonly()`、`debounce()`、`metadata()` のようなルールを使ってフィールドの振る舞いを制御する方法を示します。
 
-## When to add form logic
+## フォームロジックを追加するタイミング {#when-to-add-form-logic}
 
-Use rules when field behavior depends on other field values or needs to update reactively. For example:
+フィールドの振る舞いが他のフィールド値に依存する場合や、リアクティブに更新する必要がある場合は、ルールを使います。たとえば:
 
-- A coupon code field that's disabled when the order total is too low
-- An address field that's hidden unless shipping is required
-- A search field that debounces to reduce API calls
+- 注文合計が低すぎる場合に無効になるクーポンコードフィールド
+- 配送が必要な場合以外は非表示になる住所フィールド
+- API呼び出しを減らすためにデバウンスする検索フィールド
 
-## How rules work
+## ルールの仕組み {#how-rules-work}
 
-Rules bind reactive logic to specific fields in your form. Most conditional rules accept an options object with a `when` function. The `when` function automatically recomputes whenever the signals it references change, just like a `computed`.
+ルールは、フォーム内の特定のフィールドにリアクティブロジックをバインドします。ほとんどの条件付きルールは、`when` 関数を持つオプションオブジェクトを受け取ります。`when` 関数は、参照しているシグナルが変わるたびに、`computed` と同じように自動的に再計算されます。
 
 ```ts
 const orderForm = form(this.orderModel, (schemaPath) => {
@@ -24,23 +24,23 @@ const orderForm = form(this.orderModel, (schemaPath) => {
 });
 ```
 
-Reactive logic functions receive a `FieldContext` object that provides access to field values and state through helper functions like `valueOf()` and `stateOf()`. It is often destructured to access these helpers directly.
+リアクティブロジック関数は `FieldContext` オブジェクトを受け取ります。このオブジェクトは、`valueOf()` や `stateOf()` のようなヘルパー関数を通じてフィールドの値と状態へのアクセスを提供します。これらのヘルパーへ直接アクセスするために、分割代入されることがよくあります。
 
-NOTE: The schema callback parameter (`schemaPath` in these examples) is a `SchemaPathTree` object that provides paths to all fields in your form. You can name this parameter anything you like.
+NOTE: スキーマコールバックのパラメータ（これらの例では `schemaPath`）は、フォーム内のすべてのフィールドへのパスを提供する `SchemaPathTree` オブジェクトです。このパラメータには好きな名前を付けられます。
 
-For complete details on `FieldContext` properties and methods, see the [Validation guide](guide/forms/signals/validation).
+`FieldContext` のプロパティとメソッドの完全な詳細については、[バリデーションガイド](guide/forms/signals/validation)を参照してください。
 
-## Prevent field updates with `disabled()`
+## `disabled()` でフィールドの更新を防ぐ {#prevent-field-updates-with-disabled}
 
-The `disabled()` rule configures a field's disabled state.
+`disabled()` ルールは、フィールドの無効状態を設定します。
 
-It works with the `[formField]` directive to automatically bind the `disabled` attribute based on the field's state, so you don't need to manually add `[disabled]="yourForm.fieldName().disabled()"` to your template.
+`[formField]` ディレクティブと連携し、フィールドの状態に基づいて `disabled` 属性を自動的にバインドします。そのため、テンプレートに `[disabled]="yourForm.fieldName().disabled()"` を手動で追加する必要はありません。
 
-NOTE: Disabled fields skip validation - they don't participate in form validation checks. The field's value is preserved but not validated. For details on validation behavior, see the [Validation guide](guide/forms/signals/validation).
+NOTE: 無効なフィールドはバリデーションをスキップします。つまり、フォームバリデーションチェックに参加しません。フィールドの値は保持されますが、バリデーションされません。バリデーションの振る舞いの詳細については、[バリデーションガイド](guide/forms/signals/validation)を参照してください。
 
-### Always disabled
+### 常に無効 {#always-disabled}
 
-To disable a field permanently, call `disabled()` with just the field path:
+フィールドを永続的に無効にするには、フィールドパスだけを指定して `disabled()` を呼び出します。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -68,9 +68,9 @@ export class Settings {
 }
 ```
 
-### Conditional disabling
+### 条件付きの無効化 {#conditional-disabling}
 
-To disable a field based on conditions, provide a `when` function that returns `true` (disabled) or `false` (enabled):
+条件に基づいてフィールドを無効化するには、`true`（無効）または `false`（有効）を返す `when` 関数を指定します。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -103,11 +103,11 @@ export class Order {
 }
 ```
 
-In this example, when the order total is less than $50, the coupon code field is disabled.
+この例では、注文合計が $50未満の場合、クーポンコードフィールドが無効になります。
 
-### Disabled reasons
+### 無効化の理由 {#disabled-reasons}
 
-When you disable a field, provide user-facing explanations by returning a string instead of `true`:
+フィールドを無効化するとき、`true` の代わりに文字列を返すことで、ユーザー向けの説明を提供できます。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -151,16 +151,16 @@ export class Order {
 }
 ```
 
-The `when` function returns:
+`when` 関数は次を返します。
 
-- A **string** to disable the field with a reason
-- `false` to enable the field (not just any falsy value - use `false` explicitly)
+- 理由付きでフィールドを無効化する **文字列**
+- フィールドを有効化する `false`（任意のfalsy値ではなく、明示的に `false` を使います）
 
-Access the reasons through the `disabledReasons()` signal on the field state. Each reason has a `message` property containing the string you returned.
+理由には、フィールド状態上の `disabledReasons()` シグナルを通じてアクセスします。各理由には、返した文字列を含む `message` プロパティがあります。
 
-#### Multiple disabled reasons
+#### 複数の無効化理由 {#multiple-disabled-reasons}
 
-You can also call `disabled()` multiple times on the same field, and all of the returned reasons accumulate:
+同じフィールドに対して `disabled()` を複数回呼び出すこともでき、返された理由はすべて蓄積されます。
 
 ```angular-ts
 orderForm = form(this.orderModel, (schemaPath) => {
@@ -174,19 +174,19 @@ orderForm = form(this.orderModel, (schemaPath) => {
 });
 ```
 
-If both conditions are true, the field shows both disabled reasons. This pattern is useful for complex availability rules that you want to keep separate.
+両方の条件がtrueの場合、フィールドには両方の無効化理由が表示されます。このパターンは、分離しておきたい複雑な利用可否ルールに便利です。
 
-## Configuring `hidden()` state on fields
+## フィールドに `hidden()` 状態を設定する {#configuring-hidden-state-on-fields}
 
-The `hidden()` rule configures a field's hidden state. However, this only sets a programmatic state. **You control whether the field appears in the UI**.
+`hidden()` ルールは、フィールドの非表示状態を設定します。ただし、これはプログラム上の状態を設定するだけです。**フィールドをUIに表示するかどうかは自分で制御します**。
 
-IMPORTANT: Unlike `disabled` and `readonly`, there is no native DOM property for `hidden` state. The `[formField]` directive does not apply a `hidden` attribute to elements. You must use `@if` or CSS in your template to conditionally render fields based on the `hidden()` state.
+IMPORTANT: `disabled` や `readonly` とは異なり、`hidden` 状態にはネイティブDOMプロパティがありません。`[formField]` ディレクティブは要素に `hidden` 属性を適用しません。`hidden()` 状態に基づいてフィールドを条件付きでレンダリングするには、テンプレート内で `@if` またはCSSを使う必要があります。
 
-NOTE: Like disabled fields, hidden fields also skip validation. See the [Validation guide](guide/forms/signals/validation) for details.
+NOTE: 無効なフィールドと同様に、非表示フィールドもバリデーションをスキップします。詳細は[バリデーションガイド](guide/forms/signals/validation)を参照してください。
 
-### Basic field hiding
+### 基本的なフィールド非表示 {#basic-field-hiding}
 
-Use `hidden()` with a `when` function that returns `true` (hidden) or `false` (visible):
+`true`（非表示）または `false`（表示）を返す `when` 関数とともに `hidden()` を使います。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -221,15 +221,15 @@ export class Profile {
 }
 ```
 
-## Display uneditable fields with `readonly()`
+## `readonly()` で編集不可フィールドを表示する {#display-uneditable-fields-with-readonly}
 
-The `readonly()` rule prevents users from updating a field. The `[FormField]` directive automatically binds this state to the HTML `readonly` attribute, which prevents editing while still allowing users to focus and select text.
+`readonly()` ルールは、ユーザーがフィールドを更新するのを防ぎます。`[FormField]` ディレクティブはこの状態をHTMLの `readonly` 属性に自動的にバインドします。これにより、ユーザーがフォーカスしてテキストを選択できる状態を保ちながら、編集を防ぎます。
 
-NOTE: Readonly fields skip [validation](guide/forms/signals/validation).
+NOTE: 読み取り専用フィールドは[バリデーション](guide/forms/signals/validation)をスキップします。
 
-### Always readonly
+### 常に読み取り専用 {#always-readonly}
 
-To make a field permanently readonly, call `readonly()` with just the field path:
+フィールドを永続的に読み取り専用にするには、フィールドパスだけを指定して `readonly()` を呼び出します。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -262,11 +262,11 @@ export class Account {
 }
 ```
 
-The `[FormField]` directive automatically binds the `readonly` attribute based on the field's state.
+`[FormField]` ディレクティブは、フィールドの状態に基づいて `readonly` 属性を自動的にバインドします。
 
-### Conditional readonly
+### 条件付きの読み取り専用 {#conditional-readonly}
 
-To make a field readonly based on conditions, provide a `when` function:
+条件に基づいてフィールドを読み取り専用にするには、`when` 関数を指定します。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -299,57 +299,57 @@ export class Document {
 }
 ```
 
-When `isLocked` is true, the title field becomes readonly.
+`isLocked` がtrueの場合、タイトルフィールドは読み取り専用になります。
 
-## Choose between hidden, disabled, and readonly
+## hidden、disabled、readonly を選択する {#choose-between-hidden-disabled-and-readonly}
 
-These three configuration functions control field availability in different ways:
+これら3つの設定関数は、異なる方法でフィールドの利用可否を制御します。
 
-Choose `hidden()` when the field:
+フィールドが次の条件に当てはまる場合は、`hidden()` を選びます。
 
-- Should not appear in the UI at all
-- Is irrelevant to the current form state
-- Example: Shipping address fields when "same as billing" is checked
+- UIにまったく表示されるべきでない
+- 現在のフォーム状態に関係がない
+- 例:「請求先と同じ」がチェックされている場合の配送先住所フィールド
 
-Choose `disabled()` when the field:
+フィールドが次の条件に当てはまる場合は、`disabled()` を選びます。
 
-- Should be visible but not editable
-- Needs to show why it's unavailable (using disabled reasons)
-- Should be excluded from HTML form submission
-- Example: Submit button disabled until form is valid, approval fields disabled for non-admin users
+- 表示されるべきだが編集可能でない
+- 利用できない理由を表示する必要がある（無効化理由を使用）
+- HTMLフォーム送信から除外されるべき
+- 例: フォームが有効になるまで無効な送信ボタン、管理者以外のユーザー向けに無効な承認フィールド
 
-Choose `readonly()` when the field:
+フィールドが次の条件に当てはまる場合は、`readonly()` を選びます。
 
-- Should be visible but not editable
-- Contains data users need to see, select, or copy
-- Should be included in HTML form submission
-- Example: Order confirmation number, system-generated reference codes
+- 表示されるべきだが編集可能でない
+- ユーザーが表示、選択、コピーする必要があるデータを含む
+- HTMLフォーム送信に含めるべき
+- 例: 注文の確認番号、システム生成の参照コード
 
-All three skip validation and prevent user editing while active. The key differences:
+3つはいずれも、有効な間はバリデーションをスキップし、ユーザーによる編集を防ぎます。主な違いは次のとおりです。
 
-| Feature                          | `hidden()` | `disabled()` | `readonly()` |
+| 機能                             | `hidden()` | `disabled()` | `readonly()` |
 | -------------------------------- | ---------- | ------------ | ------------ |
-| Visible in UI                    | No         | Yes          | Yes          |
-| Users can focus/select           | No         | No           | Yes          |
-| Included in HTML form submission | No         | No           | Yes          |
+| UIに表示される                   | No         | Yes          | Yes          |
+| ユーザーがフォーカス/選択できる  | No         | No           | Yes          |
+| HTMLフォーム送信に含まれる       | No         | No           | Yes          |
 
-## Delay input operations with `debounce()`
+## `debounce()` で入力操作を遅延させる {#delay-input-operations-with-debounce}
 
-The `debounce()` rule delays updating the form model. This is useful for performance optimization and reducing unnecessary operations during rapid input.
+`debounce()` ルールは、フォームモデルの更新を遅延させます。これはパフォーマンス最適化や、素早い入力中の不要な操作を減らすのに役立ちます。
 
-### What debouncing does
+### デバウンスが行うこと {#what-debouncing-does}
 
-Without debouncing, every keystroke immediately updates the form model. This can trigger:
+デバウンスしない場合、キー入力のたびにフォームモデルが即座に更新されます。これにより、次のものがトリガーされる可能性があります。
 
-- Expensive computed signals that recalculate on every change
-- Validation checks after each character
-- API calls or other side effects tied to the model value
+- 変更のたびに再計算されるコストの高い算出シグナル
+- 文字を入力するたびのバリデーションチェック
+- モデル値に結び付いたAPI呼び出しやその他の副作用
 
-Debouncing delays these updates and reduces unnecessary work.
+デバウンスはこれらの更新を遅延させ、不要な作業を減らします。
 
-### Basic debouncing
+### 基本的なデバウンス {#basic-debouncing}
 
-You can debounce a field by specifying a delay in milliseconds:
+ミリ秒単位の遅延を指定することで、フィールドをデバウンスできます。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -378,25 +378,25 @@ export class Search {
 }
 ```
 
-With a 300ms debounce:
+300msのデバウンスでは:
 
-- User types in the input field
-- Form model updates only after 300ms of typing inactivity
-- If user keeps typing, the timer resets with each keystroke
-- Once user pauses for 300ms, the model updates with the final value
+- ユーザーが入力フィールドに入力する
+- 入力が止まってから300ms後にのみフォームモデルが更新される
+- ユーザーが入力を続ける場合、各キー入力でタイマーがリセットされる
+- ユーザーが300ms停止すると、最終値でモデルが更新される
 
-### Timing guarantees
+### タイミング保証 {#timing-guarantees}
 
-The `debounce()` function ensures users don't lose data through these mechanisms:
+`debounce()` 関数は、次の仕組みによってユーザーがデータを失わないことを保証します。
 
-- **When marked as touched:** The value syncs immediately, aborting any pending debounce delay. This happens when the field loses focus (blur) or when explicitly marked as touched.
-- **On form submission:** All fields are marked as touched before validation, which ensures all debounced values sync immediately.
+- **touched としてマークされたとき:** 値は即座に同期され、保留中のデバウンス遅延は中止されます。これは、フィールドがフォーカスを失う（blur）とき、または明示的にtouchedとしてマークされたときに発生します。
+- **フォーム送信時:** すべてのフィールドはバリデーション前にtouchedとしてマークされるため、すべてのデバウンスされた値が即座に同期されます。
 
-This means users can type quickly, tab away, or submit the form without waiting for debounce delays to expire.
+つまり、ユーザーはデバウンス遅延が期限切れになるのを待たずに、素早く入力したり、タブで移動したり、フォームを送信したりできます。
 
-### Custom debounce logic
+### カスタムデバウンスロジック {#custom-debounce-logic}
 
-For advanced control, provide a debouncer function that controls when to synchronize the value. This function is called every time the control value is updated and can return either `undefined` to synchronize immediately, or a Promise that prevents synchronization until it resolves:
+より高度に制御するには、値をいつ同期するかを制御するデバウンサー関数を指定します。この関数はコントロール値が更新されるたびに呼び出され、即座に同期するための `undefined`、または解決されるまで同期を防ぐPromiseのどちらかを返せます。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -428,39 +428,39 @@ export class Search {
 }
 ```
 
-The debouncer function can return:
+デバウンサー関数は次を返せます。
 
-- `undefined` to synchronize the value immediately
-- A `Promise<void>` that prevents synchronization until it resolves
+- 値を即座に同期するための `undefined`
+- 解決されるまで同期を防ぐ `Promise<void>`
 
-Use cases for custom debounce logic:
+カスタムデバウンスロジックのユースケース:
 
-- Implementing custom timing logic beyond simple delays
-- Coordinating synchronization with external events
-- Conditional debouncing based on application state
+- 単純な遅延を超えるカスタムタイミングロジックを実装する
+- 外部イベントと同期を調整する
+- アプリケーション状態に基づいて条件付きでデバウンスする
 
-### When to use debouncing
+### デバウンスを使うタイミング {#when-to-use-debouncing}
 
-Debouncing is most useful when:
+デバウンスは、次のような場合に最も有用です。
 
-- You have expensive computed signals that depend on the field value
-- The field triggers API calls or other side effects
-- You want to reduce validation overhead during rapid typing
-- Performance profiling shows model updates are causing slowdowns
+- フィールド値に依存するコストの高い算出シグナルがある
+- フィールドがAPI呼び出しやその他の副作用をトリガーする
+- 素早い入力中のバリデーションオーバーヘッドを減らしたい
+- パフォーマンスプロファイリングで、モデル更新が低速化の原因であることが示されている
 
-Don't use debouncing if:
+次のような場合は、デバウンスを使わないでください。
 
-- The field needs immediate updates for good UX (such as calculator inputs)
-- The performance benefit is negligible
-- Users expect real-time feedback
+- 良いUXのためにフィールドが即時更新を必要とする（計算機入力など）
+- パフォーマンス上の利点がごくわずか
+- ユーザーがリアルタイムのフィードバックを期待している
 
-## Associate data with a field using `metadata()`
+## `metadata()` でフィールドにデータを関連付ける {#associate-data-with-a-field-using-metadata}
 
-Metadata attaches reactive data to a field. Validation rules use this system internally, and you can publish your own keys for application-specific information like help text, configuration, or computed display values.
+メタデータは、リアクティブなデータをフィールドに付与します。バリデーションルールは内部的にこのシステムを使用しており、ヘルプテキスト、設定、算出された表示値のようなアプリケーション固有の情報のために、独自のキーを公開できます。
 
-Signal Forms provides six pre-defined metadata keys that built-in validators populate automatically:
+シグナルフォームは、組み込みバリデーターが自動的に設定する6つの事前定義済みメタデータキーを提供します。
 
-| Key          | Populated by  | Read via              |
+| キー         | 設定元        | 読み取り方法          |
 | ------------ | ------------- | --------------------- |
 | `REQUIRED`   | `required()`  | `field().required()`  |
 | `MIN`        | `min()`       | `field().min()`       |
@@ -469,7 +469,7 @@ Signal Forms provides six pre-defined metadata keys that built-in validators pop
 | `MAX_LENGTH` | `maxLength()` | `field().maxLength()` |
 | `PATTERN`    | `pattern()`   | `field().pattern()`   |
 
-The `[formField]` directive automatically binds five of these (`REQUIRED`, `MIN`, `MAX`, `MIN_LENGTH`, and `MAX_LENGTH`) to the corresponding HTML attribute on a native form control. `PATTERN` is the exception, because Signal Forms supports multiple patterns per field but the HTML `pattern` attribute accepts only a single regular expression.
+`[formField]` ディレクティブは、これらのうち5つ（`REQUIRED`、`MIN`、`MAX`、`MIN_LENGTH`、`MAX_LENGTH`）を、ネイティブフォームコントロール上の対応するHTML属性に自動的にバインドします。`PATTERN` は例外です。シグナルフォームはフィールドごとに複数のパターンをサポートしますが、HTMLの `pattern` 属性は単一の正規表現しか受け付けないためです。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -500,9 +500,9 @@ export class Age {
 }
 ```
 
-### Reactive metadata
+### リアクティブなメタデータ {#reactive-metadata}
 
-Validation rules can derive their constraints from other fields, making the published metadata reactive:
+バリデーションルールは制約を他のフィールドから導出できるため、公開されるメタデータもリアクティブになります。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -541,17 +541,17 @@ export class Inventory {
 }
 ```
 
-The `max()` validation rule sets the `MAX` metadata reactively based on the selected item, so any template or control reading `field().max()` updates whenever the item changes.
+`max()` バリデーションルールは、選択されたitemに基づいて `MAX` メタデータをリアクティブに設定します。そのため、`field().max()` を読み取るテンプレートやコントロールは、itemが変わるたびに更新されます。
 
-For deeper coverage, including how to define custom keys, combine contributions with reducers, and use managed metadata for lifecycle-aware objects, see the [Field metadata guide](guide/forms/signals/field-metadata).
+カスタムキーの定義、リデューサーによるコントリビューションの組み合わせ、ライフサイクルを意識したオブジェクト向けの管理対象メタデータの使用など、さらに詳しい内容については、[フィールドメタデータガイド](guide/forms/signals/field-metadata)を参照してください。
 
-## Combining rules
+## ルールを組み合わせる {#combining-rules}
 
-You can apply multiple rules to the same field, and you can use conditional logic to apply entire groups of rules based on form state.
+同じフィールドに複数のルールを適用できます。また、条件付きロジックを使って、フォーム状態に基づいてルールのグループ全体を適用できます。
 
-### Multiple rules on one field
+### 1つのフィールドに複数のルール {#multiple-rules-on-one-field}
 
-Apply multiple rules to configure all aspects of a field's behavior:
+複数のルールを適用して、フィールドの振る舞いのあらゆる側面を設定します。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -590,16 +590,16 @@ export class Promo {
 }
 ```
 
-These rules work together:
+これらのルールは一緒に機能します。
 
-- Hidden takes precedence - if the field is hidden, disabled state doesn't matter
-- Disabled prevents editing regardless of readonly state
-- Debouncing affects model updates regardless of other state
-- Metadata is independent and always available
+- 非表示が優先される。フィールドが非表示の場合、無効状態は問題にならない
+- 無効状態は、読み取り専用状態に関係なく編集を防ぐ
+- デバウンスは、他の状態に関係なくモデル更新に影響する
+- メタデータは独立しており、常に利用できる
 
-### Conditional logic with applyWhen
+### applyWhen による条件付きロジック {#conditional-logic-with-applywhen}
 
-Use `applyWhen()` to conditionally apply entire groups of rules:
+`applyWhen()` を使うと、ルールのグループ全体を条件付きで適用できます。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -643,17 +643,17 @@ export class Address {
 }
 ```
 
-The `applyWhen()` function receives:
+`applyWhen()` 関数は次を受け取ります。
 
-1. A path to apply logic to (often the root form path)
-2. A reactive logic function that returns `true` (apply) or `false` (don't apply)
-3. A schema function that defines the conditional rules
+1. ロジックを適用するパス（多くの場合はルートフォームパス）
+2. `true`（適用する）または `false`（適用しない）を返すリアクティブロジック関数
+3. 条件付きルールを定義するスキーマ関数
 
-The conditional rules only run when the condition is true. This is useful for complex forms where validation rules or behavior changes based on user choices.
+条件付きルールは、条件がtrueの場合にのみ実行されます。これは、ユーザーの選択に基づいてバリデーションルールや振る舞いが変わる複雑なフォームで便利です。
 
-### Reusable schema functions
+### 再利用可能なスキーマ関数 {#reusable-schema-functions}
 
-Extract common rule configurations into reusable functions:
+共通のルール設定を再利用可能な関数に抽出します。
 
 ```ts
 import {SchemaPath, debounce, metadata, maxLength} from '@angular/forms/signals';
@@ -676,12 +676,12 @@ const registrationForm = form(registrationModel, (schemaPath) => {
 });
 ```
 
-This pattern is useful when you have standard field configurations that you use across multiple forms in your application.
+このパターンは、アプリケーション内の複数のフォームで使う標準的なフィールド設定がある場合に便利です。
 
-## Next steps
+## 次のステップ {#next-steps}
 
-To learn more about Signal Forms, check out these related guides:
+シグナルフォームについてさらに学ぶには、次の関連ガイドを確認してください。
 
-- [Field State Management](guide/forms/signals/field-state-management) - Learn how to use the state signals created by these functions in your templates and component logic
-- [Validation](guide/forms/signals/validation) - Learn about validation rules and error handling
-- [Custom Controls](guide/forms/signals/custom-controls) - Learn how custom controls can read metadata and state to configure themselves automatically
+- [フィールド状態管理](guide/forms/signals/field-state-management) - これらの関数が作成する状態シグナルをテンプレートやコンポーネントロジックで使う方法を学ぶ
+- [バリデーション](guide/forms/signals/validation) - バリデーションルールとエラー処理について学ぶ
+- [カスタムコントロール](guide/forms/signals/custom-controls) - カスタムコントロールがメタデータと状態を読み取り、自身を自動的に設定する方法を学ぶ
