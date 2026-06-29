@@ -1,12 +1,12 @@
-# Designing your form model
+# フォームモデルの設計
 
-Signal Forms uses a model-driven approach, deriving the form's state and structure directly from the model you provide. Because it serves as the foundation of the entire form, it is important to start with a well-designed form model. This guide explores best practices for designing form models.
+シグナルフォームはモデル駆動のアプローチを使用し、提供されたモデルからフォームの状態と構造を直接導出します。フォーム全体の基盤となるため、よく設計されたフォームモデルから始めることが重要です。このガイドでは、フォームモデルを設計するためのベストプラクティスを探ります。
 
-## Form model vs domain model
+## フォームモデルとドメインモデル {#form-model-vs-domain-model}
 
-Forms are used to collect user input. Your application likely has a domain model used to represent this input in a way that's optimized for business logic or storage. However, this is often _different_ than how we want to model the data in our form.
+フォームはユーザー入力を収集するために使用されます。アプリケーションには、この入力をビジネスロジックやストレージに最適化された形で表現するためのドメインモデルがあるでしょう。しかしこれは多くの場合、フォーム内でデータをモデル化したい方法とは_異なり_ます。
 
-The form model represents the raw user input as it appears in the UI. For instance, in a form you might ask a user to pick a date and a time slot for an appointment as separate input fields, even if your domain model represents it as a single JavaScript `Date` object.
+フォームモデルは、UIに表示される生のユーザー入力を表します。たとえばフォームでは、ドメインモデルでは単一のJavaScript `Date` オブジェクトとして表現している場合でも、予定の日付と時間帯を別々の入力フィールドとしてユーザーに選んでもらうことがあります。
 
 ```ts
 interface AppointmentFormModel {
@@ -21,17 +21,17 @@ interface AppointmentDomainModel {
 }
 ```
 
-Forms should use a form model tailored to the input experience, rather than simply repurposing the domain model.
+フォームでは、ドメインモデルを単に流用するのではなく、入力体験に合わせて調整されたフォームモデルを使用するべきです。
 
-## Form model best practices
+## フォームモデルのベストプラクティス {#form-model-best-practices}
 
-### Use specific types
+### 具体的な型を使用する {#use-specific-types}
 
-Always define interfaces or types for your models as shown in [Using TypeScript types](/guide/forms/signals/models#using-typescript-types). Explicit types provide better IntelliSense, catch errors at compile time, and serve as documentation for what data the form contains.
+[TypeScriptの型を使用する](/guide/forms/signals/models#using-typescript-types)で示すように、モデルには常にインターフェースまたは型を定義してください。明示的な型は、より良いIntelliSenseを提供し、コンパイル時にエラーを検出し、フォームにどのデータが含まれるかのドキュメントとしても機能します。
 
-### Initialize all fields
+### すべてのフィールドを初期化する {#initialize-all-fields}
 
-Provide initial values for every field in your model:
+モデル内のすべてのフィールドに初期値を提供します。
 
 ```ts {prefer, header: 'All fields initialized'}
 const taskModel = signal({
@@ -49,11 +49,11 @@ const taskModel = signal({
 });
 ```
 
-Missing initial values mean those fields won't exist in the field tree, making them inaccessible for form interactions.
+初期値がないフィールドはフィールドツリー内に存在しないため、フォーム操作でアクセスできなくなります。
 
-### Keep models focused
+### モデルの焦点を絞る {#keep-models-focused}
 
-Each model should represent a single form or a cohesive set of related data:
+各モデルは、単一のフォーム、またはまとまりのある関連データの集合を表すべきです。
 
 ```ts {prefer, header: 'Focused on a single purpose'}
 const loginModel = signal({
@@ -75,11 +75,11 @@ const appModel = signal({
 });
 ```
 
-Separate models for different concerns makes forms easier to understand and reuse. Create multiple forms if you're managing distinct sets of data.
+関心事ごとにモデルを分けると、フォームを理解しやすく、再利用しやすくなります。異なるデータ集合を管理している場合は、複数のフォームを作成してください。
 
-### Consider validation requirements
+### バリデーション要件を考慮する {#consider-validation-requirements}
 
-Design models with validation in mind. Group fields that validate together:
+バリデーションを念頭に置いてモデルを設計します。一緒にバリデーションするフィールドをグループ化します。
 
 ```ts {prefer, header: 'Related fields grouped for comparison'}
 // Password fields grouped for comparison
@@ -90,15 +90,15 @@ interface PasswordChangeData {
 }
 ```
 
-This structure makes cross-field validation (like checking if `newPassword` matches `confirmPassword`) more natural.
+この構造により、`newPassword` が `confirmPassword` と一致するかを確認するようなクロスフィールドバリデーションがより自然になります。
 
-### Match data types to UI controls
+### データ型をUIコントロールに合わせる {#match-data-types-to-ui-controls}
 
-Properties on your form model should match the data types expected by your UI controls.
+フォームモデルのプロパティは、UIコントロールが期待するデータ型に合わせるべきです。
 
-For example, consider a beverage order form with a `size` field (6, 12, or 24 pack) and a `quantity` field. The UI uses a dropdown (`<select>`) for size and a number input (`<input type="number">`) for quantity.
+たとえば、`size` フィールド（6、12、または24本パック）と `quantity` フィールドをもつ飲み物の注文フォームを考えます。UIでは、サイズにドロップダウン（`<select>`）、数量に数値入力（`<input type="number">`）を使用します。
 
-Although the size options look numeric, `<select>` elements work with string values, so `size` should be modeled as a string. An `<input type="number">` on the other hand, does work with numbers, so `quantity` can be modeled as a number.
+サイズの選択肢は数値に見えますが、`<select>` 要素は文字列値で動作するため、`size` は文字列としてモデル化するべきです。一方、`<input type="number">` は数値で動作するため、`quantity` は数値としてモデル化できます。
 
 ```ts {prefer, header: 'Appropriate data types for the bound UI controls'}
 interface BeverageOrderFormModel {
@@ -107,11 +107,11 @@ interface BeverageOrderFormModel {
 }
 ```
 
-### Avoid `undefined`
+### `undefined` を避ける {#avoid-undefined}
 
-A form model must not contain `undefined` values or properties. In Signal Forms the structure of the form is derived from the structure of the model, and `undefined` signifies the _absence of a field_, rather than a field with an empty value. This means you must also avoid optional fields (e.g., `{property?: string}`), as they implicitly allow `undefined`.
+フォームモデルには `undefined` の値やプロパティを含めてはいけません。シグナルフォームでは、フォームの構造はモデルの構造から導出され、`undefined` は空の値をもつフィールドではなく、_フィールドの不在_を意味します。つまり、オプショナルフィールド（例: `{property?: string}`）も暗黙的に `undefined` を許可するため、避ける必要があります。
 
-To represent a property with an empty value in your form model, use a value that the UI control understands to mean "empty" (e.g. `""` for a `<input type="text">`). If you're designing a custom UI control, `null` often works as a good value to signify "empty".
+フォームモデルで空の値をもつプロパティを表現するには、UIコントロールが「空」を意味すると理解できる値を使用します（例: `<input type="text">` では `""`）。カスタムUIコントロールを設計している場合、`null` は「空」を示す値としてうまく機能することがよくあります。
 
 ```ts {prefer, header: 'Appropriate empty values'}
 interface UserFormModel {
@@ -123,13 +123,13 @@ interface UserFormModel {
 form(signal({name: '', birthday: null}));
 ```
 
-### Avoid models with dynamic structure
+### 動的構造をもつモデルを避ける {#avoid-models-with-dynamic-structure}
 
-A form model has a dynamic structure if it changes shape (if the properties on the object change) based on its value. This happens when the model type allows for values with different shapes, such as a union of object types that have different properties, or a union of an object and a primitive. The following sections examine a few common scenarios where models with a dynamic structure might seem appealing, but ultimately prove problematic.
+フォームモデルがその値に基づいて形を変える（オブジェクト上のプロパティが変わる）場合、そのフォームモデルは動的構造をもっています。これは、異なるプロパティをもつオブジェクト型のユニオンや、オブジェクトとプリミティブのユニオンなど、モデル型が異なる形の値を許可する場合に発生します。以降のセクションでは、動的構造をもつモデルが魅力的に見えても、最終的には問題になる一般的なシナリオをいくつか見ていきます。
 
-#### Empty value for a complex object
+#### 複雑なオブジェクトの空の値 {#empty-value-for-a-complex-object}
 
-We often use forms to ask users to enter brand new data, rather than edit existing data in a system. A good example of this is an account creation form. We might model that using the following form model.
+既存のシステム内のデータを編集するのではなく、ユーザーにまったく新しいデータを入力してもらうためにフォームを使うことはよくあります。その良い例がアカウント作成フォームです。次のフォームモデルを使って表現できそうです。
 
 ```ts
 interface CreateAccountFormModel {
@@ -141,13 +141,13 @@ interface CreateAccountFormModel {
 }
 ```
 
-When creating the form we encounter a dilemma, what should the initial value in the model be? It may be tempting to create a `form<CreateAccountFormModel | null>()` since we don't have any input from the user yet.
+フォームを作成するとき、モデルの初期値を何にするべきかというジレンマに直面します。まだユーザーからの入力がないため、`form<CreateAccountFormModel | null>()` を作成したくなるかもしれません。
 
 ```ts {avoid, header: 'Using null as empty value for complex object'}
 createAccountForm = form<CreateAccountFormModel | null>(signal(/* what goes here, null? */));
 ```
 
-However, it is important to remember that Signal Forms is _model driven_. If our model is `null` and `null` doesn't have a `name` or `username` property, that means our form won't have those subfields either. Instead what we really want is an instance of `CreateAccountFormModel` with all of its leaf fields set to an empty value.
+しかし、シグナルフォームが_モデル駆動_であることを覚えておくことが重要です。モデルが `null` で、`null` には `name` や `username` プロパティがない場合、フォームにもそれらのサブフィールドはありません。代わりに本当に必要なのは、すべてのリーフフィールドが空の値に設定された `CreateAccountFormModel` のインスタンスです。
 
 ```ts {prefer, header: 'Same shape value with empty values for properties'}
 createAccountForm = form<CreateAccountFormModel>(
@@ -161,7 +161,7 @@ createAccountForm = form<CreateAccountFormModel>(
 );
 ```
 
-Using this representation, all of the subfields we need now exist, and we can bind them using the `[formField]` directive in our template.
+この表現を使用すると、必要なすべてのサブフィールドが存在し、テンプレート内で `[formField]` ディレクティブを使用してバインドできます。
 
 ```html
 First: <input [formField]="createAccountForm.name.first" /> Last:
@@ -169,9 +169,9 @@ First: <input [formField]="createAccountForm.name.first" /> Last:
 <input [formField]="createAccountForm.username" />
 ```
 
-#### Fields that are conditionally hidden or unavailable
+#### 条件付きで非表示または利用不可になるフィールド {#fields-that-are-conditionally-hidden-or-unavailable}
 
-Forms aren't always linear. You often need to create conditional paths based on previous user input. One example of this is a form where we give the user different payment options. Let's start by imagining what the UI for such a form might look like.
+フォームは常に直線的とは限りません。以前のユーザー入力に基づいて条件付きの経路を作成する必要がよくあります。その一例が、ユーザーに異なる支払いオプションを提示するフォームです。まず、そのようなフォームのUIがどのように見えるかを想像してみましょう。
 
 ```html
 Name: <input type="text" />
@@ -190,7 +190,7 @@ Name: <input type="text" />
 </section>
 ```
 
-The best way to handle this is to use a form model with a static structure that includes fields for _all_ potential payment methods. In our schema, we can hide or disable the fields that are not currently available.
+これを扱う最善の方法は、_すべての_潜在的な支払い方法のフィールドを含む静的構造のフォームモデルを使用することです。スキーマでは、現在利用できないフィールドを非表示または無効化できます。
 
 ```ts {prefer, header: 'Static structure model'}
 interface BillPayFormModel {
@@ -217,9 +217,9 @@ const billPaySchema = schema<BillPayFormModel>((billPay) => {
 });
 ```
 
-Using this model, both `card` and `bank` objects are always present in the form's state. When the user switches payment methods, we only update the `type` property. The data they entered into the card fields remains safely stored in the `card` object, ready to be redisplayed if they switch back.
+このモデルを使用すると、`card` オブジェクトと `bank` オブジェクトの両方が常にフォームの状態に存在します。ユーザーが支払い方法を切り替えたとき、更新するのは `type` プロパティだけです。ユーザーがカードフィールドに入力したデータは `card` オブジェクトに安全に保存されたままで、切り替え直したときに再表示できる状態になっています。
 
-In contrast, a dynamic form model may initially seem like a good fit for this use case. After all, we don't need fields for account and routing number if the user selected "Credit Card". We may be tempted to model this as a discriminated union:
+対照的に、動的フォームモデルは最初、このユースケースに適しているように見えるかもしれません。結局のところ、ユーザーが「Credit Card」を選択した場合、口座番号とルーティング番号のフィールドは不要です。これを判別可能ユニオンとしてモデル化したくなるかもしれません。
 
 ```ts {avoid, header: 'Dynamic structure model'}
 interface BillPayFormModel {
@@ -239,23 +239,23 @@ interface BillPayFormModel {
 }
 ```
 
-However, consider what would happen in the following scenario:
+しかし、次のシナリオで何が起きるかを考えてみてください。
 
-1. User fills out their name and credit card information
-2. They're about to submit, but at the last moment they notice the convenience fee.
-3. They toggle to the bank account option instead, figuring they might as well avoid the fee.
-4. As they're about to enter the bank account info, they have second thoughts, they wouldn't want it to wind up in a leak.
-5. They toggle back to credit card option, but they notice all the info they just entered is gone!
+1. ユーザーが名前とクレジットカード情報を入力する
+2. 送信しようとした直前に、手数料に気づく。
+3. 手数料を避けられるならそのほうがよいと考え、代わりに銀行口座オプションへ切り替える。
+4. 銀行の口座情報を入力しようとしたところで、漏えいしたら困ると考え直す。
+5. クレジットカードオプションに戻すが、入力したばかりの情報がすべて消えていることに気づく。
 
-This illustrates another problem with form models that have a dynamic structure: they can cause data loss. A model like this assumes that once a field becomes hidden, the information in it will never be needed again. It replaces the credit card information with the bank information, and has no way to get the credit card information back.
+これは、動的構造をもつフォームモデルのもう1つの問題、つまりデータ損失を引き起こす可能性を示しています。このようなモデルは、フィールドがいったん非表示になると、その中の情報は二度と必要にならないと仮定しています。クレジットカード情報を銀行の口座情報で置き換えてしまい、クレジットカード情報を取り戻す方法がありません。
 
-#### Exceptions
+#### 例外 {#exceptions}
 
-While static structure is generally preferred, there are specific scenarios where dynamic structure is necessary and supported.
+一般的には静的構造が望ましいものの、動的構造が必要でサポートされる特定のシナリオがあります。
 
-##### Arrays
+##### 配列 {#arrays}
 
-Arrays are the most common exception. Forms often need to collect a variable number of items, such as a list of phone numbers, attendees, or line items in an order.
+配列はもっとも一般的な例外です。フォームでは、電話番号のリスト、参加者、注文内の明細項目など、可変個数の項目を収集する必要がよくあります。
 
 ```ts
 interface SendEmailFormModel {
@@ -264,13 +264,13 @@ interface SendEmailFormModel {
 }
 ```
 
-In this case, the `recipientEmails` array grows and shrinks as the user interacts with the form. While the length of the array is dynamic, the structure of the individual items should be consistent (each item should have the same shape).
+この場合、`recipientEmails` 配列はユーザーがフォームを操作するにつれて増減します。配列の長さは動的ですが、個々の項目の構造は一貫しているべきです（各項目は同じ形をもつべきです）。
 
-##### Fields that are treated atomically by the UI control
+##### UIコントロールによってアトミックに扱われるフィールド {#fields-that-are-treated-atomically-by-the-ui-control}
 
-Another case where dynamic structure is acceptable is when a complex object is treated as a single, atomic value by the UI control. That is, if the control does not attempt to bind to or access any of its sub-fields individually. In this scenario, the control updates the value by replacing the entire object at once, rather than modifying its internal properties. Because the form structure is irrelevant in this scenario, it's acceptable for that structure to be dynamic.
+動的構造が許容されるもう1つのケースは、複雑なオブジェクトがUIコントロールによって単一のアトミックな値として扱われる場合です。つまり、そのコントロールがサブフィールドへ個別にバインドしたりアクセスしたりしない場合です。このシナリオでは、コントロールは内部プロパティを変更するのではなく、オブジェクト全体を一度に置き換えて値を更新します。このシナリオではフォーム構造が関係しないため、その構造が動的でも許容されます。
 
-For example, consider a user profile form that includes a `location` field. The location is selected using a complex "location picker" widget (perhaps a map or a search-ahead dropdown) that returns a coordinate object. In the case where the location is not yet selected, or the user chooses not to share their location, the picker indicates the location as `null`.
+たとえば、`location` フィールドを含むユーザープロフィールフォームを考えます。位置情報は、座標オブジェクトを返す複雑な「位置選択」ウィジェット（おそらく地図や検索候補付きドロップダウン）を使用して選択されます。位置情報がまだ選択されていない場合、またはユーザーが位置情報を共有しないことを選んだ場合、ピッカーは位置情報を `null` として示します。
 
 ```ts {prefer, header: 'Dynamic structure is ok when field is treated as atomic'}
 interface Location {
@@ -286,20 +286,20 @@ interface UserProfileFormModel {
 }
 ```
 
-In the template, we bind the `location` field directly to our custom control:
+テンプレートでは、`location` フィールドをカスタムコントロールに直接バインドします。
 
 ```html
 Username: <input [formField]="userForm.username" /> Location:
 <location-picker [formField]="userForm.location"></location-picker>
 ```
 
-Here, `<location-picker>` consumes and produces the entire `Location` object (or `null`), and doesn't access `userForm.location.lat` or `userForm.location.lng`. Therefore, `location` can safely have a dynamic shape without violating the principles of model-driven forms.
+ここでは、`<location-picker>` が `Location` オブジェクト全体（または `null`）を受け取り生成し、`userForm.location.lat` や `userForm.location.lng` にはアクセスしません。したがって、`location` はモデル駆動フォームの原則に違反することなく、動的な形を安全にもてます。
 
-## Translating between form model and domain model
+## フォームモデルとドメインモデル間の変換 {#translating-between-form-model-and-domain-model}
 
-Given that the form model and domain model represent the same concept differently, we need to have a way to translate between these different representations. When we want to present some existing data in the system to the user in a form, we need to transform it from the domain model representation to the form model representation. Conversely when we want to save a user's changes, we need to transform the data from the form model representation to the domain model representation.
+フォームモデルとドメインモデルは同じ概念を異なる方法で表すため、これらの異なる表現の間で変換する方法が必要です。システム内の既存データをフォームでユーザーに提示したい場合は、ドメインモデル表現からフォームモデル表現へ変換する必要があります。逆に、ユーザーの変更を保存したい場合は、フォームモデル表現からドメインモデル表現へデータを変換する必要があります。
 
-Let's imagine that we have a domain model and a form model and we've written some functions to convert between them.
+ドメインモデルとフォームモデルがあり、それらの間で変換する関数を書いたと想像してみましょう。
 
 ```ts
 interface MyDomainModel { ... }
@@ -314,11 +314,11 @@ function domainModelToFormModel(domainModel: MyDomainModel): MyFormModel { ... }
 function formModelToDomainModel(formModel: MyFormModel): MyDomainModel { ... }
 ```
 
-### Domain model to form model
+### ドメインモデルからフォームモデルへ {#domain-model-to-form-model}
 
-When we're creating a form to edit some existing domain model in the system, we'll typically receive that domain model either as an `input()` to our form component or from a backend (e.g. via a resource). In either case, `linkedSignal` provides an excellent way to apply our transform.
+システム内の既存のドメインモデルを編集するフォームを作成する場合、通常はそのドメインモデルをフォームコンポーネントへの `input()` として受け取るか、バックエンドから（たとえばリソース経由で）受け取ります。どちらの場合でも、`linkedSignal` は変換を適用する優れた方法を提供します。
 
-In the case where we receive the domain model as an `input()`, we can use `linkedSignal` to create a writable form model from the input signal.
+ドメインモデルを `input()` として受け取る場合、`linkedSignal` を使用して入力シグナルから書き込み可能なフォームモデルを作成できます。
 
 ```ts {prefer, header: 'Use linkedSignal to convert domain model to form model'}
 @Component(...)
@@ -339,7 +339,7 @@ class MyForm {
 }
 ```
 
-Similarly, when we receive the domain model from the backend via a resource, we can create a `linkedSignal` based on its value to create our `formModel`. In this scenario, the domain model may take some time to fetch, and we should disable the form until the data is loaded.
+同様に、バックエンドからリソース経由でドメインモデルを受け取る場合、その値に基づいて `linkedSignal` を作成し、`formModel` を作成できます。このシナリオでは、ドメインモデルの取得に時間がかかる場合があるため、データが読み込まれるまでフォームを無効化するべきです。
 
 ```ts {prefer, header: 'Disable or hide the form when data is unavailable'}
 @Component(...)
@@ -363,13 +363,13 @@ class MyForm {
 }
 ```
 
-The examples above show a pure derivation of the form model, directly from the domain model. However, in some cases you may wish to do a more advanced diff operation between the new domain model value and the previous domain model and form model values. This can be implemented based on the `linkedSignal` [previous state](/guide/signals/linked-signal#accounting-for-previous-state).
+上記の例は、ドメインモデルから直接フォームモデルを純粋に導出する方法を示しています。しかし場合によっては、新しいドメインモデル値と、以前のドメインモデル値およびフォームモデル値の間で、より高度な差分処理を行いたいことがあります。これは `linkedSignal` の[以前の状態](/guide/signals/linked-signal#accounting-for-previous-state)に基づいて実装できます。
 
-### Form model to domain model
+### フォームモデルからドメインモデルへ {#form-model-to-domain-model}
 
-When we're ready to save the user's input back to the system, we need to convert it to the domain model representation. This would typically happen when the user submits the form, or continuously as the user edits for an auto-saving form.
+ユーザーの入力をシステムへ保存できる状態になったら、それをドメインモデル表現へ変換する必要があります。これは通常、ユーザーがフォームを送信するとき、または自動保存フォームでユーザーが編集するたびに継続的に行われます。
 
-To save on submit, we can handle the conversion in the `submit` function.
+送信時に保存するには、`submit` 関数内で変換を処理できます。
 
 ```ts {prefer, header: 'Convert form model to domain model on submit'}
 @Component(...)
@@ -386,10 +386,10 @@ class MyForm {
 }
 ```
 
-Alternatively, you could also send the form model directly to the server and do the conversion from
-form model to domain model on the server.
+あるいは、フォームモデルをサーバーへ直接送信し、サーバー側で
+フォームモデルからドメインモデルへ変換できます。
 
-For continuous saving, update the domain model in an `effect`.
+継続的な保存では、`effect` 内でドメインモデルを更新します。
 
 ```ts {prefer, header: 'Convert form model to domain model in an effect for auto-saving'}
 @Component(...)
@@ -409,7 +409,7 @@ class MyForm {
 }
 ```
 
-The examples above show a pure conversion from the form model to the domain model. However, it is perfectly acceptable to consider the full form state in addition to just the form model value. For example, to save bytes we might want to only send partial updates to the server based on what the user changed. In this case our conversion function could be designed to take the entire form state and return a sparse domain model based on the form's values and dirtiness.
+上記の例は、フォームモデルからドメインモデルへの純粋な変換を示しています。しかし、フォームモデルの値だけでなく、フォーム状態全体を考慮することもまったく問題ありません。たとえば、送信量を減らすために、ユーザーが変更した内容に基づく部分更新だけをサーバーへ送信したい場合があります。この場合、変換関数はフォーム状態全体を受け取り、フォームの値とdirty状態に基づいてスパースなドメインモデルを返すように設計できます。
 
 ```ts
 type Sparse<T> = T extends object ? {
