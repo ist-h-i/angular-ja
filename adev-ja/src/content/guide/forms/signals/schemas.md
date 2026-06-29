@@ -1,10 +1,10 @@
-# Schemas and schema composability
+# スキーマとスキーマの合成性
 
-Signal Forms uses a two-layer architecture to separate _how your form is structured_ from _how it behaves at runtime_.
+シグナルフォームは2層のアーキテクチャを使って、_フォームがどのように構造化されるか_ と _実行時にどのように振る舞うか_ を分離します。
 
-When you pass a schema function to `form()`, that function _runs once_ during form creation. Its job is to set up the form's logic tree by declaring which fields have validation, which fields are disabled, and which fields depend on other fields. This is the **structural layer** of your form.
+`form()` にスキーマ関数を渡すと、その関数はフォーム作成時に _一度だけ_ 実行されます。この関数の役割は、どのフィールドに検証があり、どのフィールドが無効になり、どのフィールドが他のフィールドに依存するかを宣言して、フォームのロジックツリーを設定することです。これがフォームの **構造レイヤー** です。
 
-Inside a schema function, you call rule functions such as `disabled()` and `validate()`. These rule functions accept reactive logic that recomputes whenever the signals they reference change. Conditional rules like `disabled()` and `required()` accept optional configuration, including a `when` function that activates the rule. Together, these form the **behavioral layer** of your form during runtime.
+スキーマ関数の中では、`disabled()` や `validate()` などのルール関数を呼び出します。これらのルール関数は、参照しているシグナルが変わるたびに再計算されるリアクティブロジックを受け取ります。`disabled()` や `required()` のような条件付きルールは、そのルールを有効にする `when` 関数を含む任意の設定を受け取れます。これらが一緒になって、実行時のフォームの **振る舞いレイヤー** を形成します。
 
 ```ts
 contactForm = form(this.contactModel, (schemaPath) => {
@@ -29,11 +29,11 @@ graph TD
     B2 --> G
 ```
 
-This distinction is important when you compose schemas because functions like `apply()`, `applyWhen()`, and `schema()` all operate at the structural layer. Schemas control _which_ rules exist and _whether_ they're active, while rule functions define _what_ those rules evaluate.
+この区別は、スキーマを合成するときに重要です。`apply()`、`applyWhen()`、`schema()` のような関数はすべて構造レイヤーで動作するためです。スキーマは、_どの_ ルールが存在し、それらが _有効かどうか_ を制御します。一方でルール関数は、それらのルールが _何を_ 評価するかを定義します。
 
-## Create reusable schemas with `schema()`
+## `schema()` で再利用可能なスキーマを作成する {#create-reusable-schemas-with-schema}
 
-When multiple forms share the same rules for a common data shape, you can use the `schema()` function to extract those rules into a reusable schema.
+複数のフォームが共通のデータ形状に対して同じルールを共有する場合、`schema()` 関数を使ってそれらのルールを再利用可能なスキーマとして抽出できます。
 
 ```ts
 import {schema, required, minLength} from '@angular/forms/signals';
@@ -46,13 +46,13 @@ const nameSchema = schema<{first: string; last: string}>((name) => {
 });
 ```
 
-The `schema()` function wraps a function and converts it into a reusable `Schema<T>` object. Like any schema function, it _runs once_ per form, but the object itself can be shared across as many forms as you need.
+`schema()` 関数は関数をラップし、再利用可能な `Schema<T>` オブジェクトに変換します。他のスキーマ関数と同じように、フォームごとに _一度だけ_ 実行されますが、オブジェクト自体は必要なだけ多くのフォームで共有できます。
 
-TIP: If rules only appear in one place, an inline schema function works just as well. Use `schema()` when you want to reuse the same schema across multiple forms or apply the same schema to multiple paths. Reusable `Schema` objects are cached per form compilation.
+TIP: ルールが1か所にしか現れない場合は、インラインのスキーマ関数でも同じように機能します。複数のフォームで同じスキーマを再利用したい場合や、同じスキーマを複数のパスに適用したい場合に `schema()` を使います。再利用可能な `Schema` オブジェクトはフォームのコンパイルごとにキャッシュされます。
 
-### Using the schema with `apply()`
+### `apply()` でスキーマを使用する {#using-the-schema-with-apply}
 
-You can apply a reusable schema to a specific path in a form by using the `apply()` function. When you call `apply()`, the schema receives a scoped path that only sees the fields within that sub-path:
+`apply()` 関数を使うと、再利用可能なスキーマをフォーム内の特定のパスに適用できます。`apply()` を呼び出すと、スキーマはそのサブパス内のフィールドだけを参照するスコープ付きパスを受け取ります。
 
 ```ts
 import {apply} from '@angular/forms/signals';
@@ -66,17 +66,17 @@ registrationForm = form(this.registrationModel, (schemaPath) => {
 });
 ```
 
-## Conditional schemas with `applyWhen()`
+## `applyWhen()` による条件付きスキーマ {#conditional-schemas-with-applywhen}
 
-NOTE: The [Adding form logic guide](guide/forms/signals/form-logic) introduced `applyWhen()` for conditional rules with inline logic. This section covers how to compose `applyWhen()` with reusable schemas.
+NOTE: [フォームロジックの追加ガイド](guide/forms/signals/form-logic) では、インラインロジックを使った条件付きルールのために `applyWhen()` を紹介しました。このセクションでは、`applyWhen()` を再利用可能なスキーマと合成する方法を扱います。
 
-Some rules should only apply under certain conditions. For example, a zip code field might require validation only when the selected country is the United States.
+一部のルールは、特定の条件下でのみ適用されるべきです。たとえば、郵便番号フィールドは、選択された国が米国の場合にのみ検証を必要とすることがあります。
 
-The `applyWhen()` function applies a schema conditionally based on reactive state. It accepts three arguments:
+`applyWhen()` 関数は、リアクティブな状態に基づいてスキーマを条件付きで適用します。この関数は3つの引数を受け取ります。
 
-1. A path to apply the schema to
-1. A reactive logic function that returns `true` when the schema should be active
-1. A schema or schema function containing the conditional rules
+1. スキーマを適用するパス
+1. スキーマが有効になるべきときに `true` を返すリアクティブロジック関数
+1. 条件付きルールを含むスキーマまたはスキーマ関数
 
 ```ts
 import {form, applyWhen, required, pattern} from '@angular/forms/signals';
@@ -93,15 +93,15 @@ addressForm = form(this.addressModel, (schemaPath) => {
 });
 ```
 
-The logic function receives a `FieldContext`, which provides access to `value`, `valueOf`, `stateOf`, and other reactive helpers. Because it's reactive, the condition is re-evaluated whenever the signals it reads change. When the condition becomes `false`, the rules inside the schema deactivate. When it becomes `true` again, they reactivate.
+ロジック関数は `FieldContext` を受け取り、`value`、`valueOf`、`stateOf`、その他のリアクティブヘルパーにアクセスできます。これはリアクティブなので、条件が読み取るシグナルが変わるたびに再評価されます。条件が `false` になると、スキーマ内のルールは非アクティブになります。再び `true` になると、それらのルールは再アクティブ化されます。
 
-The schema itself is still structural — the schema function runs once during form creation. The condition controls whether those rules are _active_, not whether they _exist_.
+スキーマ自体は引き続き構造的です。つまり、スキーマ関数はフォーム作成時に一度だけ実行されます。条件が制御するのは、それらのルールの _アクティブ_ 状態であり、ルールの _存在_ ではありません。
 
-Inside the conditional schema, use the scoped path parameter passed to that schema function. Paths from an outer schema are not valid inside a nested schema.
+条件付きスキーマの中では、そのスキーマ関数に渡されたスコープ付きパスパラメータを使います。外側のスキーマのパスは、ネストされたスキーマ内では有効ではありません。
 
-### Combining `applyWhen()` with reusable schemas
+### `applyWhen()` と再利用可能なスキーマを組み合わせる {#combining-applywhen-with-reusable-schemas}
 
-Since `applyWhen()` accepts a `Schema` object, you can pair it with `schema()` to conditionally apply reusable schemas:
+`applyWhen()` は `Schema` オブジェクトを受け取れるため、`schema()` と組み合わせて再利用可能なスキーマを条件付きで適用できます。
 
 ```ts
 const usZipCodeSchema = schema<{zipCode: string}>((address) => {
@@ -128,13 +128,13 @@ shippingForm = form(this.shippingModel, (schemaPath) => {
 });
 ```
 
-NOTE: The logic function accesses `valueOf(schemaPath.country)` even though the path argument is `schemaPath.address`. This is because the `valueOf` helper can access any field in the form, not just fields within the scoped path.
+NOTE: ロジック関数は、パス引数が `schemaPath.address` であっても `valueOf(schemaPath.country)` にアクセスしています。これは、`valueOf` ヘルパーが、スコープ付きパス内のフィールドだけでなくフォーム内の任意のフィールドにアクセスできるためです。
 
-This pattern keeps validation logic modular — each country's address rules live in their own schema, and the form selects which one to activate based on the user's choice.
+このパターンにより、検証ロジックはモジュール化された状態に保たれます。各国の住所ルールはそれぞれ独自のスキーマに置かれ、フォームはユーザーの選択に基づいてどれを有効にするかを選びます。
 
-## Type-narrowing with `applyWhenValue()`
+## `applyWhenValue()` による型の絞り込み {#type-narrowing-with-applywhenvalue}
 
-The `applyWhenValue()` function simplifies conditions that only need to check the field's value. Instead of receiving a `FieldContext`, the condition function receives the field's raw value directly.
+`applyWhenValue()` 関数は、フィールドの値だけを確認すればよい条件を簡略化します。`FieldContext` を受け取る代わりに、条件関数はフィールドの生の値を直接受け取ります。
 
 ```ts {header: "applyWhen — logic function receives FieldContext"}
 applyWhen(schemaPath.payment, ({value}) => value().type === 'credit-card', creditCardSchema);
@@ -144,7 +144,7 @@ applyWhen(schemaPath.payment, ({value}) => value().type === 'credit-card', credi
 applyWhenValue(schemaPath.payment, (payment) => payment.type === 'credit-card', creditCardSchema);
 ```
 
-The main advantage of `applyWhenValue()` is TypeScript type guard support. When the condition function is a type guard, the schema's type parameter narrows to the guarded type. This is especially useful for discriminated unions, where each variant has different fields that need different rules.
+`applyWhenValue()` の主な利点は、TypeScriptの型ガードをサポートしていることです。条件関数が型ガードである場合、スキーマの型パラメータはガードされた型に絞り込まれます。これは、各バリアントに異なるルールが必要な異なるフィールドがある判別共用体でとくに便利です。
 
 ```ts
 import {form, applyWhenValue, required} from '@angular/forms/signals';
@@ -188,11 +188,11 @@ paymentForm = form(this.paymentModel, (schemaPath) => {
 });
 ```
 
-Without the type guard, TypeScript would not know which fields are available inside each schema function. The type narrowing ensures that accessing `payment.cardNumber` is type-safe in the credit card branch and `payment.accountNumber` is type-safe in the bank transfer branch.
+型ガードがない場合、TypeScriptは各スキーマ関数の中でどのフィールドが利用できるかを判断できません。型の絞り込みにより、クレジットカードの分岐では `payment.cardNumber` へのアクセスが、銀行振込の分岐では `payment.accountNumber` へのアクセスが型安全であることが保証されます。
 
-## Array items with `applyEach()`
+## `applyEach()` による配列項目 {#array-items-with-applyeach}
 
-When a form contains an array of objects, you often need the same rules applied to every item. The `applyEach()` function applies a schema to each item in an array field, regardless of how many items exist.
+フォームにオブジェクトの配列が含まれる場合、多くの場合はすべての項目に同じルールを適用する必要があります。`applyEach()` 関数は、存在する項目数に関係なく、配列フィールド内の各項目にスキーマを適用します。
 
 ```ts
 import {form, applyEach, required, min} from '@angular/forms/signals';
@@ -209,11 +209,11 @@ orderForm = form(this.orderModel, (schemaPath) => {
 });
 ```
 
-The schema function passed to `applyEach()` receives a `SchemaPathTree` scoped to a single array item. Rules declared inside apply to every item in the array, including items added after form creation.
+`applyEach()` に渡されたスキーマ関数は、単一の配列項目にスコープされた `SchemaPathTree` を受け取ります。内部で宣言されたルールは、フォーム作成後に追加された項目を含む、配列内のすべての項目に適用されます。
 
-### Combining `applyEach()` with reusable schemas
+### `applyEach()` と再利用可能なスキーマを組み合わせる {#combining-applyeach-with-reusable-schemas}
 
-Since `applyEach()` accepts a `Schema` object, you can extract item-level rules into a reusable schema and share them across forms:
+`applyEach()` は `Schema` オブジェクトを受け取れるため、項目レベルのルールを再利用可能なスキーマに抽出し、複数のフォーム間で共有できます。
 
 ```ts
 const lineItemSchema = schema<LineItem>((item) => {
@@ -232,12 +232,12 @@ invoiceForm = form(this.invoiceModel, (schemaPath) => {
 });
 ```
 
-TIP: For more on validating array items, including custom error messages per field, see the [Validation guide](guide/forms/signals/validation).
+TIP: フィールドごとのカスタムエラーメッセージを含め、配列項目の検証について詳しくは、[検証ガイド](guide/forms/signals/validation) を参照してください。
 
-## Next steps
+## 次のステップ {#next-steps}
 
-To learn more about Signal Forms, check out these related guides:
+シグナルフォームについてさらに学ぶには、次の関連ガイドを確認してください。
 
-- [Adding form logic](guide/forms/signals/form-logic) - Learn how to add conditional logic, dynamic behavior, and metadata to your forms
-- [Validation](guide/forms/signals/validation) - Learn about validation rules and error handling
-- [Async operations](guide/forms/signals/async-operations) - Learn how to handle form submission and async validation
+- [フォームロジックの追加](guide/forms/signals/form-logic) - 条件付きロジック、動的な振る舞い、メタデータをフォームに追加する方法を学ぶ
+- [検証](guide/forms/signals/validation) - 検証ルールとエラー処理について学ぶ
+- [非同期操作](guide/forms/signals/async-operations) - フォーム送信と非同期検証の扱い方を学ぶ
