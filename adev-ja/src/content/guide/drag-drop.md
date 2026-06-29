@@ -13,7 +13,7 @@
 - ドラッグ時にプレビューを追加する
 - カスタムドラッグプレースホルダーを追加する
 
-完全なAPIリファレンスについては、[Angular CDKのドラッグアンドドロップAPIリファレンスページ](/api/#angular_cdk_drag-drop)を参照してください。
+完全なAPIリファレンスについては、[Angular CDKのドラッグアンドドロップAPIリファレンスページ](api#angular_cdk_drag-drop)を参照してください。
 
 ## 始める前に {#before-you-start}
 
