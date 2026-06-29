@@ -492,7 +492,7 @@ export class UserProfile {
 
 ### 循環依存 {#circular-dependencies}
 
-循環依存は、サービスが互いを注入し、Angularが解決できない循環を作る場合に発生します。詳細な説明とコード例については、[NG0200: Circular dependency](reference/errors/NG0200)を参照してください。
+循環依存は、サービスが互いを注入し、Angularが解決できない循環を作る場合に発生します。詳細な説明とコード例については、[NG0200: Circular dependency](errors/NG0200)を参照してください。
 
 **解決戦略**（推奨順）:
 
@@ -990,13 +990,13 @@ Angularはコンストラクターを呼び出して依存性を注入するこ�
 
 ### その他のDIエラーコード {#other-di-error-codes}
 
-これらのエラーの詳細な説明と解決策については、[Angularエラーリファレンス](reference/errors/overview)を参照してください。
+これらのエラーの詳細な説明と解決策については、[Angularエラーリファレンス](errors)を参照してください。
 
 | エラーコード            | 説明                                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------------ |
-| [NG0204](reference/errors/NG0204) | すべてのパラメーターを解決できません - `@Injectable()`デコレーターがありません            |
-| [NG0205](reference/errors/NG0205) | インジェクターはすでに破棄されています - コンポーネント破棄後にサービスへアクセスしています |
-| [NG0207](reference/errors/NG0207) | EnvironmentProvidersが誤ったコンテキストにあります - コンポーネントプロバイダーで`provideHttpClient()`を使用しています |
+| [NG0204](errors/NG0204) | すべてのパラメーターを解決できません - `@Injectable()`デコレーターがありません            |
+| [NG0205](errors/NG0205) | インジェクターはすでに破棄されています - コンポーネント破棄後にサービスへアクセスしています |
+| [NG0207](errors/NG0207) | EnvironmentProvidersが誤ったコンテキストにあります - コンポーネントプロバイダーで`provideHttpClient()`を使用しています |
 
 ## 次のステップ {#next-steps}
 
