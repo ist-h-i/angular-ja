@@ -1,37 +1,37 @@
-# Form submission
+# フォーム送信
 
-When a user submits a form, your application typically needs to handle multiple concerns at once: surfacing validation errors, preventing duplicate submission, sending data to a server, and much more. Handling each of these manually can be tedious and prone to error.
+ユーザーがフォームを送信するとき、アプリケーションでは通常、バリデーションエラーの表示、重複送信の防止、サーバーへのデータ送信など、複数の関心事を一度に扱う必要があります。これらをそれぞれ手動で処理するのは面倒で、エラーも起こりがちです。
 
-Signal Forms provides a `submit()` function that helps you manage the form submission lifecycle. This guide walks through how to use it.
+シグナルフォームは、フォーム送信のライフサイクル管理に役立つ `submit()` 関数を提供します。このガイドでは、その使い方を説明します。
 
-## What does `submit()` do?
+## `submit()` は何をするのか {#what-does-submit-do}
 
-The `submit()` function runs through a specific sequence:
+`submit()` 関数は、特定の順序で処理を実行します。
 
-1. **Mark interactive fields as touched** — Fields that display errors only after being touched will now show their validation errors. Hidden, disabled, and readonly fields are skipped.
-1. **Check validation** — If any validation rules have failed, submission stops and the `action` function does not run.
-1. **Run the action** — The `action` function executes with the form's current value. While it runs, `submitting()` returns `true`.
-1. **Handle the result** — If the action returns errors, they are routed to their target fields. If it returns nothing, the submission is treated as successful.
+1. **インタラクティブなフィールドを touched としてマークする** — touchedになった後にだけエラーを表示するフィールドは、ここでバリデーションエラーを表示します。非表示、無効、読み取り専用のフィールドはスキップされます。
+1. **バリデーションを確認する** — いずれかのバリデーションルールが失敗している場合、送信は停止し、`action` 関数は実行されません。
+1. **action を実行する** — `action` 関数がフォームの現在値で実行されます。実行中は `submitting()` が `true` を返します。
+1. **結果を処理する** — actionがエラーを返す場合、それらは対象フィールドにルーティングされます。何も返さない場合、送信は成功として扱われます。
 
-The `submit()` function returns a `Promise<boolean>` that resolves to `true` when the action completes without errors, and `false` when validation fails or the action returns errors.
+`submit()` 関数は `Promise<boolean>` を返します。actionがエラーなしで完了すると `true` に解決され、バリデーションが失敗するかactionがエラーを返すと `false` に解決されます。
 
-## Setting up form submission with `FormRoot`
+## `FormRoot` でフォーム送信を設定する {#setting-up-form-submission-with-formroot}
 
-The most common way to use the `submit()` function is through the `FormRoot` directive.
+`submit()` 関数を使う最も一般的な方法は、`FormRoot` ディレクティブを通じて使うことです。
 
-The `FormRoot` directive handles three things automatically when bound to a `<form>` element:
+`FormRoot` ディレクティブは、`<form>` 要素にバインドされると、次の3つを自動的に処理します。
 
-1. **Sets [`novalidate`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/form#novalidate)** — Disables the browser's built-in validation so Signal Forms manages validation instead
-1. **Prevents default** — Stops the browser from navigating on form submission
-1. **Calls `submit()`** — Triggers the submission flow when the user submits the form
+1. **[`novalidate`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/form#novalidate) を設定する** — ブラウザの組み込みバリデーションを無効にし、代わりにシグナルフォームがバリデーションを管理します
+1. **デフォルト動作を防ぐ** — フォーム送信時にブラウザがナビゲーションするのを止めます
+1. **`submit()` を呼び出す** — ユーザーがフォームを送信したときに送信フローをトリガーします
 
-NOTE: The `FormRoot` directive sets the `novalidate` attribute on the `form` element automatically. You do not need to add it manually when using `FormRoot`.
+NOTE: `FormRoot` ディレクティブは、`form` 要素に `novalidate` 属性を自動的に設定します。`FormRoot` を使う場合、手動で追加する必要はありません。
 
-`FormRoot` handles the submission event, but you still need to tell it _what to do_ with the form data. That requires three things:
+`FormRoot` は送信イベントを処理しますが、フォームデータで _何をするか_ は別途伝える必要があります。そのためには3つが必要です。
 
-1. Bind your form to the `FormRoot` directive
-1. Pass a `submission` option to the `form()` function
-1. Define an `action` function within the `submission` option that manages the submitted data
+1. フォームを `FormRoot` ディレクティブにバインドする
+1. `form()` 関数に `submission` オプションを渡す
+1. 送信されたデータを管理する `action` 関数を `submission` オプション内に定義する
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -82,13 +82,13 @@ export class Contact {
 }
 ```
 
-The `action` function runs only when no validation rules have failed. By default, pending async validators do not block submission (see [Controlling validation gating](#controlling-validation-gating-with-ignorevalidators) for more details). The action receives the field tree and a `detail` object with `root` and `submitted` field trees, which is useful when submitting a sub-form.
+`action` 関数は、どのバリデーションルールも失敗していない場合にのみ実行されます。デフォルトでは、保留中の非同期バリデーターは送信をブロックしません（詳細は[バリデーションゲートをignoreValidatorsで制御する](#controlling-validation-gating-with-ignorevalidators)を参照してください）。actionはフィールドツリーと、`root` および `submitted` のフィールドツリーを含む `detail` オブジェクトを受け取ります。これはサブフォームを送信する場合に便利です。
 
-After validation passes, the action itself may still fail due to scenarios such as a network error or duplicate entry. In those cases, you can surface the failure by returning the error(s). On the other hand, to indicate success, you only need to return `null` or `undefined`, or call an empty `return`.
+バリデーションが通過した後でも、ネットワークエラーや重複エントリなどのシナリオにより、action自体が失敗することがあります。そのような場合は、エラーを返すことで失敗を表示できます。一方、成功を示すには、`null` や `undefined` を返すか、空の `return` を呼び出すだけで十分です。
 
-## Showing submission state with `submitting()`
+## `submitting()` で送信状態を表示する {#showing-submission-state-with-submitting}
 
-When you need to track whether the form is in the process of submitting, Signal Forms provides a `submitting()` signal that returns `true` while the `action` function is running. Use it to show loading indicators or disable the submit button to prevent duplicate submissions.
+フォームが送信処理中かどうかを追跡する必要がある場合、シグナルフォームは、`action` 関数の実行中に `true` を返す `submitting()` シグナルを提供します。これを使ってローディングインジケーターを表示したり、送信ボタンを無効にして重複送信を防いだりします。
 
 ```angular-html
 <button type="submit" [disabled]="contactForm().submitting()">
@@ -100,17 +100,17 @@ When you need to track whether the form is in the process of submitting, Signal 
 </button>
 ```
 
-Once the `action` function succeeds or returns an error, the `submitting()` signal automatically resets back to `false`.
+`action` 関数が成功するかエラーを返すと、`submitting()` シグナルは自動的に `false` に戻ります。
 
-## Managing submission errors
+## 送信エラーを管理する {#managing-submission-errors}
 
-### Server errors
+### サーバーエラー {#server-errors}
 
-When your `action` function communicates with a server, the server may return errors that need to appear on specific fields. Return these errors from the `action` to route them to their target fields.
+`action` 関数がサーバーと通信する場合、サーバーは特定のフィールドに表示する必要があるエラーを返すことがあります。これらのエラーを `action` から返すと、対象フィールドへルーティングできます。
 
-#### Errors on the submitted field
+#### 送信されたフィールド上のエラー {#errors-on-the-submitted-field}
 
-By default, errors returned from the `action` are assigned to the submitted field (the field tree you passed to `submit()`):
+デフォルトでは、`action` から返されたエラーは、送信されたフィールド（`submit()` に渡したフィールドツリー）に割り当てられます。
 
 ```ts
 action: async (field) => {
@@ -121,9 +121,9 @@ action: async (field) => {
 };
 ```
 
-#### Errors on specific fields
+#### 特定のフィールド上のエラー {#errors-on-specific-fields}
 
-When you want to route an error to a specific field, include a `fieldTree` property pointing to that field:
+特定のフィールドにエラーをルーティングしたい場合は、そのフィールドを指す `fieldTree` プロパティを含めます。
 
 ```ts
 action: async (field) => {
@@ -134,9 +134,9 @@ action: async (field) => {
 };
 ```
 
-#### Multiple errors
+#### 複数のエラー {#multiple-errors}
 
-When you want to report errors on multiple fields, return an array:
+複数のフィールドでエラーを報告したい場合は、配列を返します。
 
 ```ts
 action: async (field) => {
@@ -151,17 +151,17 @@ action: async (field) => {
 };
 ```
 
-### Auto-clearing submission errors
+### 送信エラーの自動クリア {#auto-clearing-submission-errors}
 
-Submission errors clear automatically when the user edits the field. If the `action` returns an error on the email field, that error disappears as soon as the user changes the email value.
+ユーザーがフィールドを編集すると、送信エラーは自動的にクリアされます。`action` がemailフィールド上のエラーを返した場合、そのエラーはユーザーがemail値を変更するとすぐに消えます。
 
-This differs from validation errors, which recompute reactively. Validation rules run again on each change and may produce the same error. Submission errors are one-time results from the server — once cleared, they do not reappear unless the form is submitted again.
+これは、リアクティブに再計算されるバリデーションエラーとは異なります。バリデーションルールは変更のたびに再実行され、同じエラーを生成することがあります。送信エラーはサーバーからの1回限りの結果です。一度クリアされると、フォームが再び送信されない限り再表示されません。
 
-TIP: Submission errors appear alongside validation errors in the field's `errors()` signal. For guidance on displaying errors in your template, see the [Field State Management guide](guide/forms/signals/field-state-management).
+TIP: 送信エラーは、フィールドの `errors()` シグナル内でバリデーションエラーと並んで表示されます。テンプレートでエラーを表示する方法については、[フィールド状態管理ガイド](guide/forms/signals/field-state-management)を参照してください。
 
-## Handling invalid submissions with `onInvalid`
+## `onInvalid` で無効な送信を処理する {#handling-invalid-submissions-with-oninvalid}
 
-When validation fails, the `action` function does not run. If you need to respond to a failed submission attempt — such as scrolling to the first error, showing a toast, or focusing an invalid field — use the `onInvalid` callback.
+バリデーションが失敗すると、`action` 関数は実行されません。最初のエラーまでスクロールする、トーストを表示する、無効なフィールドにフォーカスするなど、失敗した送信試行に対応する必要がある場合は、`onInvalid` コールバックを使います。
 
 ```ts
 contactForm = form(
@@ -184,17 +184,17 @@ contactForm = form(
 );
 ```
 
-The `onInvalid` callback receives the same `(field, detail)` parameters as `action`. It runs after all interactive fields are marked as touched, so validation errors are already visible in the UI when it executes.
+`onInvalid` コールバックは、`action` と同じ `(field, detail)` パラメータを受け取ります。すべてのインタラクティブなフィールドがtouchedとしてマークされた後に実行されるため、実行時にはバリデーションエラーがすでにUIに表示されています。
 
-## Controlling validation gating with `ignoreValidators`
+## バリデーションゲートを `ignoreValidators` で制御する {#controlling-validation-gating-with-ignorevalidators}
 
-By default, `submit()` ignores pending validators. If no validators have failed, the action runs even if some async validators are still in progress. The `ignoreValidators` option gives you control over this behavior.
+デフォルトでは、`submit()` は保留中のバリデーターを無視します。失敗しているバリデーターがなければ、一部の非同期バリデーターがまだ進行中でもactionは実行されます。`ignoreValidators` オプションを使うと、この振る舞いを制御できます。
 
-| Value       | Behavior                                                                 |
-| ----------- | ------------------------------------------------------------------------ |
-| `'pending'` | Submit if no validators have failed, even if some are pending (default)  |
-| `'none'`    | Submit only if all validators pass — pending validators block submission |
-| `'all'`     | Always submit regardless of validation state                             |
+| 値          | 振る舞い                                                                       |
+| ----------- | ------------------------------------------------------------------------------ |
+| `'pending'` | 失敗したバリデーターがなければ、一部が保留中でも送信する（デフォルト）         |
+| `'none'`    | すべてのバリデーターが通過した場合のみ送信する。保留中のバリデーターは送信をブロックする |
+| `'all'`     | バリデーション状態に関係なく常に送信する                                       |
 
 ```ts
 contactForm = form(
@@ -214,11 +214,11 @@ contactForm = form(
 );
 ```
 
-Use `'none'` when your form has async validators (such as checking username availability) and you need all validation to complete before submitting. Use `'all'` for draft-saving scenarios where you want to persist data regardless of validation state.
+ユーザー名の利用可否チェックなど、フォームに非同期バリデーターがあり、送信前にすべてのバリデーションを完了する必要がある場合は `'none'` を使います。バリデーション状態に関係なくデータを永続化したい下書き保存のシナリオでは `'all'` を使います。
 
-## Manual submission with `submit()`
+## `submit()` による手動送信 {#manual-submission-with-submit}
 
-The `FormRoot` directive is the most common way to trigger submission, but you can also call `submit()` directly. This is useful for multi-step wizards, auto-save, or triggering submission from outside the form element.
+送信をトリガーする最も一般的な方法は `FormRoot` ディレクティブですが、`submit()` を直接呼び出すこともできます。これは、複数ステップのウィザード、自動保存、フォーム要素の外側からの送信トリガーに便利です。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -269,9 +269,9 @@ export class Contact {
 }
 ```
 
-## Handling side effects
+## 副作用を処理する {#handling-side-effects}
 
-The `submit()` function returns a `Promise<boolean>` — `true` when the action completes without errors, `false` when validation fails or the action returns errors. Use this to trigger side effects like navigation or notifications.
+`submit()` 関数は `Promise<boolean>` を返します。actionがエラーなしで完了すると `true`、バリデーションが失敗するかactionがエラーを返すと `false` です。これを使って、ナビゲーションや通知のような副作用をトリガーします。
 
 ```ts
 async onSave() {
@@ -285,7 +285,7 @@ async onSave() {
 }
 ```
 
-When the action produces data that a side effect needs, such as a server-generated ID, handle the side effect inside the action:
+サーバーが生成したIDなど、副作用に必要なデータをactionが生成する場合は、その副作用をaction内で処理します。
 
 ```ts
 async onSave() {
@@ -296,7 +296,7 @@ async onSave() {
 }
 ```
 
-When using `FormRoot`, side effects also go inside the `action` since `FormRoot` calls `submit()` internally:
+`FormRoot` を使う場合も、`FormRoot` が内部で `submit()` を呼び出すため、副作用は `action` の中に置きます。
 
 ```ts
 submission: {
@@ -312,16 +312,16 @@ submission: {
 }
 ```
 
-## Concurrent submissions
+## 同時送信 {#concurrent-submissions}
 
-When a submission is in progress, subsequent calls to `submit()` for the same form or any of its parents return `false` immediately without running the action. This prevents duplicate submissions and side effects if a user triggers the submit action multiple times quickly.
+送信が進行中の場合、同じフォームまたはその親のいずれかに対する後続の `submit()` 呼び出しは、actionを実行せずに即座に `false` を返します。これにより、ユーザーが送信アクションを短時間に複数回トリガーした場合の重複送信と副作用を防ぎます。
 
-## Next steps
+## 次のステップ {#next-steps}
 
-This guide covered submitting forms and handling form submission errors. Related guides explore other aspects of Signal Forms:
+このガイドでは、フォームの送信とフォーム送信エラーの処理について説明しました。関連ガイドでは、シグナルフォームの他の側面について探求します。
 
 <docs-pill-row>
-  <docs-pill href="guide/forms/signals/validation" title="Validation" />
-  <docs-pill href="guide/forms/signals/field-state-management" title="Field state management" />
-  <docs-pill href="guide/forms/signals/form-logic" title="Adding form logic" />
+  <docs-pill href="guide/forms/signals/validation" title="バリデーション" />
+  <docs-pill href="guide/forms/signals/field-state-management" title="フィールド状態管理" />
+  <docs-pill href="guide/forms/signals/form-logic" title="フォームロジックの追加" />
 </docs-pill-row>
