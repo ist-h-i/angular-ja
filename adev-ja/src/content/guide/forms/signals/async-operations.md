@@ -1,23 +1,23 @@
-# Async operations
+# 非同期操作
 
-Some validation requires data from external sources like backend APIs or third-party services. Signal Forms provides two functions for asynchronous validation: `validateHttp()` for HTTP-based validation and `validateAsync()` for custom resource-based validation.
+一部のバリデーションでは、バックエンドAPIやサードパーティサービスなどの外部ソースからのデータが必要です。シグナルフォームは、非同期バリデーションのために2つの関数を提供します。HTTPベースのバリデーションには `validateHttp()`、カスタムリソースベースのバリデーションには `validateAsync()` を使用します。
 
-## When to use async validation
+## 非同期バリデーションを使用するタイミング {#when-to-use-async-validation}
 
-Use async validation when your validation logic requires external data. Some common examples include:
+バリデーションロジックに外部データが必要な場合は、非同期バリデーションを使用します。一般的な例には次のものがあります。
 
-- **Uniqueness checks** - Verify usernames or emails don't already exist
-- **Database lookups** - Check values against server-side data
-- **External API validation** - Validate addresses, tax IDs, or other data with third-party services
-- **Server-side business rules** - Apply validation rules that only the server can verify
+- **一意性チェック** - ユーザー名やメールアドレスがすでに存在しないことを検証する
+- **データベース検索** - 値をサーバー側データと照合する
+- **外部APIバリデーション** - 住所、納税者番号、その他のデータをサードパーティサービスで検証する
+- **サーバー側ビジネスルール** - サーバーだけが検証できるバリデーションルールを適用する
 
-Don't use async validation for checks you can perform synchronously on the client. Use synchronous validation rules like `pattern()`, `email()`, or `validate()` for format validation and static rules.
+クライアントで同期的に実行できるチェックには、非同期バリデーションを使用しないでください。形式のバリデーションや静的ルールには、`pattern()`、`email()`、`validate()` などの同期バリデーションルールを使用します。
 
-## How async validation works
+## 非同期バリデーションの仕組み {#how-async-validation-works}
 
-Async validation runs only after all synchronous validation passes. While the validation executes, the field's `pending()` signal returns `true`. The validation can target errors to specific fields, and pending requests cancel automatically when field values change.
+非同期バリデーションは、すべての同期バリデーションが成功した後にのみ実行されます。バリデーションの実行中、フィールドの `pending()` シグナルは `true` を返します。バリデーションは特定のフィールドへエラーを向けることができ、フィールド値が変わると保留中のリクエストは自動的にキャンセルされます。
 
-Here's an example checking username availability:
+ユーザー名の利用可能性をチェックする例を次に示します。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -73,22 +73,22 @@ export class Registration {
 }
 ```
 
-The validation flow works like this:
+バリデーションフローは次のように動作します。
 
-1. User types a value
-2. Synchronous validation rules run first
-3. If synchronous validation fails, async validation doesn't run
-4. If synchronous validation passes, async validation starts and `pending()` becomes `true`
-5. The request completes and `pending()` becomes `false`
-6. Errors update based on the response
+1. ユーザーが値を入力する
+2. 同期バリデーションルールが先に実行される
+3. 同期バリデーションが失敗した場合、非同期バリデーションは実行されない
+4. 同期バリデーションが成功した場合、非同期バリデーションが開始され、`pending()` が `true` になる
+5. リクエストが完了し、`pending()` が `false` になる
+6. レスポンスに基づいてエラーが更新される
 
-## HTTP validation with validateHttp()
+## validateHttp() によるHTTPバリデーション {#http-validation-with-validatehttp}
 
-The `validateHttp()` function provides the most common form of async validation. Use it when you need to validate against a REST API or any HTTP endpoint.
+`validateHttp()` 関数は、もっとも一般的な非同期バリデーションの形を提供します。REST APIや任意のHTTPエンドポイントに対して検証する必要がある場合に使用します。
 
-### Request function
+### request関数 {#request-function}
 
-The `request` function returns either a URL string or an `HttpResourceRequest` object. Return `undefined` to skip the validation:
+`request` 関数はURL文字列または `HttpResourceRequest` オブジェクトを返します。バリデーションをスキップするには `undefined` を返します。
 
 ```ts
 import {Component, signal} from '@angular/core';
@@ -134,7 +134,7 @@ export class Registration {
 }
 ```
 
-For POST requests or custom headers, return an `HttpResourceRequest` object:
+POSTリクエストやカスタムヘッダーには、`HttpResourceRequest` オブジェクトを返します。
 
 ```ts
 request: ({value}) => ({
@@ -144,9 +144,9 @@ request: ({value}) => ({
 }) // prettier-ignore
 ```
 
-### Success and error handlers
+### 成功ハンドラーとエラーハンドラー {#success-and-error-handlers}
 
-The `onSuccess` function receives the HTTP response and returns validation errors or `undefined` for valid values:
+`onSuccess` 関数はHTTPレスポンスを受け取り、有効な値にはバリデーションエラーまたは `undefined` を返します。
 
 ```ts
 onSuccess: (response: { valid: boolean; message?: string }) => {
@@ -159,7 +159,7 @@ onSuccess: (response: { valid: boolean; message?: string }) => {
 } // prettier-ignore
 ```
 
-Return multiple errors when needed:
+必要に応じて複数のエラーを返します。
 
 ```ts
 onSuccess: (response: { usernameTaken: boolean; profanity: boolean }) => {
@@ -180,7 +180,7 @@ onSuccess: (response: { usernameTaken: boolean; profanity: boolean }) => {
 } // prettier-ignore
 ```
 
-The `onError` function handles request failures like network errors or HTTP errors:
+`onError` 関数は、ネットワークエラーやHTTPエラーのようなリクエスト失敗を処理します。
 
 ```ts
 onError: (error) => {
@@ -192,9 +192,9 @@ onError: (error) => {
 } // prettier-ignore
 ```
 
-### HTTP options
+### HTTPオプション {#http-options}
 
-Customize the HTTP request with the `options` parameter:
+`options` パラメータでHTTPリクエストをカスタマイズします。
 
 ```ts
 import {HttpHeaders} from '@angular/common/http';
@@ -221,24 +221,24 @@ validateHttp(schemaPath.field, {
 });
 ```
 
-TIP: See the [httpResource API documentation](api/common/http/httpResource) for all available options.
+TIP: 利用可能なすべてのオプションについては、[httpResource APIドキュメント](api/common/http/httpResource)を参照してください。
 
-## Custom async validation with validateAsync()
+## validateAsync() によるカスタム非同期バリデーション {#custom-async-validation-with-validateasync}
 
-Most applications should use `validateHttp()` for async validation. It handles HTTP requests with minimal configuration and covers the majority of use cases.
+ほとんどのアプリケーションでは、非同期バリデーションに `validateHttp()` を使用するべきです。これは最小限の設定でHTTPリクエストを処理し、大半のユースケースをカバーします。
 
-`validateAsync()` is a lower-level API that exposes Angular's resource primitive directly. It offers complete control but requires more code and familiarity with Angular's resource API.
+`validateAsync()` は、Angularのリソースプリミティブを直接公開する低レベルAPIです。完全な制御を提供しますが、より多くのコードとAngularのリソースAPIへの理解が必要です。
 
-Consider `validateAsync()` only when `validateHttp()` can't meet your needs. Some examples include:
+`validateHttp()` で要件を満たせない場合にのみ、`validateAsync()` を検討してください。例には次のものがあります。
 
-- **Non-HTTP validation** - WebSocket connections, IndexedDB lookups, or Web Worker computations
-- **Custom caching strategies** - Application-specific caching beyond simple memoization
-- **Complex retry logic** - Custom backoff strategies or conditional retries
-- **Direct resource access** - When you need the full resource lifecycle
+- **非HTTPバリデーション** - WebSocket接続、IndexedDB検索、Web Worker計算
+- **カスタムキャッシュ戦略** - 単純なメモ化を超えたアプリケーション固有のキャッシュ
+- **複雑な再試行ロジック** - カスタムバックオフ戦略や条件付き再試行
+- **リソースへの直接アクセス** - 完全なリソースライフサイクルが必要な場合
 
-### Creating a custom validation rule
+### カスタムバリデーションルールを作成する {#creating-a-custom-validation-rule}
 
-The `validateAsync()` function requires four properties: `params`, `factory`, `onSuccess`, and `onError`. The `params` function returns the parameters for your resource, while `factory` creates the resource:
+`validateAsync()` 関数には、`params`、`factory`、`onSuccess`、`onError` の4つのプロパティが必要です。`params` 関数はリソース用のパラメータを返し、`factory` はリソースを作成します。
 
 ```ts
 import {Component, inject, signal, resource, Signal} from '@angular/core';
@@ -304,11 +304,11 @@ export class Registration {
 }
 ```
 
-The `params` function runs on every value change. Return `undefined` to skip validation. The `factory` function runs once during setup and receives params as a signal. The resource updates automatically when params change.
+`params` 関数は値が変更されるたびに実行されます。バリデーションをスキップするには `undefined` を返します。`factory` 関数はセットアップ中に一度実行され、パラメータをシグナルとして受け取ります。パラメータが変わると、リソースは自動的に更新されます。
 
-### Using Observable-based services
+### Observableベースのサービスを使用する {#using-observable-based-services}
 
-If your application has existing services that return Observables, use `rxResource` from `@angular/core/rxjs-interop`:
+アプリケーションにObservableを返す既存サービスがある場合は、`@angular/core/rxjs-interop` の `rxResource` を使用します。
 
 ```ts
 import {Component, inject, signal, Signal} from '@angular/core';
@@ -348,15 +348,15 @@ export class Registration {
 }
 ```
 
-The `rxResource` function works directly with Observables and handles subscription cleanup automatically when the field value changes.
+`rxResource` 関数はObservableと直接連携し、フィールド値が変わったときのサブスクリプションのクリーンアップを自動的に処理します。
 
-## Debouncing
+## デバウンス {#debouncing}
 
-The `debounce` rule delays when a user's input is committed to the form model. You can think of it as the rule holding back values until the user pauses typing. This is useful when downstream behavior shouldn't react to every keystroke, such as expensive derived computations, validation that flashes errors mid-word, or search filters that reapply on each character.
+`debounce` ルールは、ユーザーの入力がフォームモデルへコミットされるタイミングを遅らせます。ユーザーが入力を一時停止するまで値を保留するルール、と考えられます。高コストな派生計算、単語の入力途中でエラーをちらつかせるバリデーション、各文字ごとに再適用される検索フィルターなど、下流の挙動がすべてのキーストロークに反応するべきでない場合に便利です。
 
-Add the `debounce` rule inside a schema to delay how a form field's UI changes reach the form model. In its simplest form, `debounce(path, ms)` holds each UI change for the given number of milliseconds before writing it to the model. A new change within that window resets the timer.
+フォームフィールドのUI変更がフォームモデルに到達するタイミングを遅らせるには、スキーマ内に `debounce` ルールを追加します。もっとも単純な形では、`debounce(path, ms)` は各UI変更を指定したミリ秒数だけ保持してからモデルに書き込みます。その時間枠内に新しい変更があると、タイマーはリセットされます。
 
-The following example applies `debounce` and `validateHttp` to the username field to delay the username availability check in a registration form until the user pauses typing:
+次の例では、登録フォームでユーザーが入力を一時停止するまでユーザー名の利用可能性チェックを遅らせるため、ユーザー名フィールドに `debounce` と `validateHttp` を適用しています。
 
 ```angular-ts
 import {Component, signal} from '@angular/core';
@@ -401,19 +401,19 @@ export class Registration {
 }
 ```
 
-With a 300 ms debounce, the model updates and validates only after the user pauses typing longer than the configured duration. For example, typing "signal forms" in a quick burst fires one validation request instead of twelve.
+300ミリ秒のデバウンスでは、設定された時間より長くユーザーが入力を一時停止した後にのみ、モデルが更新され、バリデーションが実行されます。たとえば、"signal forms" を素早く入力すると、12回ではなく1回のバリデーションリクエストだけが発火します。
 
-### Touch flushes the model
+### touchがモデルをフラッシュする {#touch-flushes-the-model}
 
-Regardless of the debounce duration, the framework writes the field's `controlValue()` to the model immediately when the field becomes touched. Native inputs become touched on blur, so a user who finishes typing and tabs away doesn't have to wait for the debounce timer to expire. Custom controls can mark the field as touched in response to any event they choose.
+デバウンス時間に関係なく、フィールドがtouchedになると、フレームワークはフィールドの `controlValue()` を即座にモデルへ書き込みます。ネイティブ入力はblurでtouchedになるため、入力を終えてタブ移動したユーザーはデバウンスタイマーの期限切れを待つ必要がありません。カスタムコントロールは、任意のイベントに応じてフィールドをtouchedとしてマークできます。
 
-In the typical case, this matters for form submission. When the user clicks a submit button, the focused input blurs, which touches that field and flushes its pending debounce before the submission handler runs.
+典型的なケースでは、これはフォーム送信で重要です。ユーザーが送信ボタンをクリックすると、フォーカスされた入力がblurし、そのフィールドがtouchedになって、送信ハンドラーが実行される前に保留中のデバウンスがフラッシュされます。
 
-### Commit only on blur
+### blur時にのみコミットする {#commit-only-on-blur}
 
-Some fields shouldn't update mid-typing at all, and instead should only update after the user has finished entering a value. For example, if you have a search filter that reapplies on every change or a form that triggers expensive derived state, it is often better for the model to wait until the user finishes typing.
+一部のフィールドは入力途中でまったく更新せず、ユーザーが値の入力を終えた後にのみ更新するべきです。たとえば、変更ごとに再適用される検索フィルターや、高コストな派生状態をトリガーするフォームがある場合、モデルはユーザーが入力を終えるまで待つほうがよいことがよくあります。
 
-In these scenarios, pass `'blur'` instead of a duration to defer all updates until the field becomes touched:
+このようなシナリオでは、時間の長さではなく `'blur'` を渡し、フィールドがtouchedになるまで、すべての更新を延期します。
 
 ```ts
 form(this.registrationModel, (schemaPath) => {
@@ -421,11 +421,11 @@ form(this.registrationModel, (schemaPath) => {
 });
 ```
 
-With `'blur'`, the model keeps its previous value while the user is typing. Sync and async validation, derived signals, and any reactive rules reading the field all see the previous value until the field becomes touched. This commonly occurs when the user blurs a native input, or when a custom control signals touch on its own.
+`'blur'` では、ユーザーが入力している間、モデルは以前の値を保持します。同期および非同期バリデーション、派生シグナル、フィールドを読み取るリアクティブなルールはすべて、フィールドがtouchedになるまで以前の値を参照します。これは一般的に、ユーザーがネイティブ入力をblurしたとき、またはカスタムコントロールが自らtouchを通知したときに発生します。
 
-### Custom timing logic
+### カスタムタイミングロジック {#custom-timing-logic}
 
-For timing logic that a duration or `'blur'` can't express, pass a `Debouncer` function. The function receives the field context and an [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal), and returns a `Promise<void>` that resolves when the model should update:
+時間の長さや `'blur'` では表現できないタイミングロジックには、`Debouncer` 関数を渡します。この関数はフィールドコンテキストと [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) を受け取り、モデルを更新するべきタイミングで解決される `Promise<void>` を返します。
 
 ```ts
 import {debounce, type Debouncer} from '@angular/forms/signals';
@@ -452,11 +452,11 @@ const registrationForm = form(registrationModel, (schemaPath) => {
 });
 ```
 
-The `abortSignal` fires when the field is touched, or when its value changes before the debounce resolves. Resolve the promise on abort so your debouncer releases any pending timers. The framework writes the pending value to the model on touch, and discards it when a newer value arrives. See the [`debounce` API reference](api/forms/signals/debounce) for the full `Debouncer` signature.
+フィールドがtouchedになるか、デバウンスが解決する前に値が変わると、`abortSignal` が発火します。abort時にpromiseを解決して、デバウンサーが保留中のタイマーを解放するようにします。フレームワークはtouch時に保留中の値をモデルへ書き込み、新しい値が届いたときにはそれを破棄します。完全な `Debouncer` シグネチャについては、[`debounce` APIリファレンス](api/forms/signals/debounce)を参照してください。
 
-### Debouncing a single async validator
+### 単一の非同期バリデーターをデバウンスする {#debouncing-a-single-async-validator}
 
-The `debounce` rule holds back every reaction to the field, from sync validation to derived signals to async validation. However, there are times when you want the opposite: cheap sync validators like `required` or `email` running immediately for instant feedback, while only the expensive async call waits for the user to settle. Both `validateHttp()` and `validateAsync()` accept their own [`debounce` option](api/forms/signals/validateAsync) that throttles just that validator:
+`debounce` ルールは、同期バリデーションから派生シグナル、非同期バリデーションまで、そのフィールドへのすべての反応を保留します。しかし、逆のことをしたい場合もあります。`required` や `email` のような低コストな同期バリデーターは即時フィードバックのためにすぐ実行し、高コストな非同期呼び出しだけはユーザーの入力が落ち着くまで待つ、という場合です。`validateHttp()` と `validateAsync()` はどちらも、そのバリデーターだけを調整する独自の [`debounce` オプション](api/forms/signals/validateAsync)を受け入れます。
 
 ```ts
 form(this.registrationModel, (schemaPath) => {
@@ -478,22 +478,22 @@ form(this.registrationModel, (schemaPath) => {
 });
 ```
 
-The model still updates on every keystroke, and any other rules attached to the field still react immediately. Only the HTTP request is debounced: each change waits 300 ms of quiet before firing, so a request only goes out once the user has paused typing.
+モデルは引き続きキーストロークごとに更新され、そのフィールドに付けられた他のルールも即座に反応します。HTTPリクエストだけがデバウンスされます。各変更は300ミリ秒の静けさを待ってから発火するため、ユーザーが入力を一時停止したときにだけリクエストが送信されます。
 
-Choose between the two layers based on scope:
+スコープに基づいて2つのレイヤーを選択します。
 
-| Option                                                        | When to use                                                                                                                         |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `debounce()` rule                                             | Sync validation, derived state, and submission should all wait until the field commits. The whole field shouldn't react mid-typing. |
-| `validateHttp({ debounce })` or `validateAsync({ debounce })` | Cheap sync validators should give immediate feedback, but expensive async calls should wait for the user to pause.                  |
+| オプション                                                    | 使用するタイミング                                                                                                                        |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `debounce()` ルール                                           | 同期バリデーション、派生状態、送信のすべてがフィールドのコミットまで待つべき場合。フィールド全体が入力途中に反応するべきではない場合。 |
+| `validateHttp({ debounce })` または `validateAsync({ debounce })` | 低コストな同期バリデーターは即時フィードバックを提供し、高コストな非同期呼び出しだけがユーザーの一時停止を待つべき場合。                 |
 
-Both options accept a duration in milliseconds. Their custom-timing callbacks differ: the form-level rule takes a `Debouncer`, and the validator-level option takes a `DebounceTimer` from `@angular/core`. The two signatures are not interchangeable.
+どちらのオプションもミリ秒単位の時間を受け入れます。カスタムタイミングのコールバックは異なります。フォームレベルのルールは `Debouncer` を受け取り、バリデーターレベルのオプションは `@angular/core` の `DebounceTimer` を受け取ります。2つのシグネチャは互換性がありません。
 
-## Composing resources in async validation with a factory
+## factoryによる非同期バリデーションでのリソース合成 {#composing-resources-in-async-validation-with-a-factory}
 
-The built-in [`debounce` option](api/forms/signals/validateAsync) covers throttling, but `validateAsync()` exposes a deeper composition point: the `factory` function. The factory receives the params as a signal and returns a resource. Between those two points, you're free to compose whatever you need.
+組み込みの [`debounce` オプション](api/forms/signals/validateAsync)はスロットリングをカバーしますが、`validateAsync()` はより深い合成ポイントである `factory` 関数を公開します。factoryはパラメータをシグナルとして受け取り、リソースを返します。この2点の間で、必要なものを自由に合成できます。
 
-In its simplest form, a factory wraps a single resource. A username-availability check can live as a method on the component class, and then be wired into `validateAsync` by reference:
+もっとも単純な形では、factoryは単一のリソースをラップします。ユーザー名の利用可能性チェックはコンポーネントクラスのメソッドとして置き、参照によって `validateAsync` に接続できます。
 
 ```ts
 export class Registration {
@@ -525,11 +525,11 @@ export class Registration {
 }
 ```
 
-The `params` callback returns `undefined` for short usernames, signaling that validation should skip. With `debounce: 300` applied, the resource waits until the user pauses typing for 300 ms before acting on each change. It then runs the loader for valid usernames and stays idle once the debounced value settles to `undefined`.
+`params` コールバックは短いユーザー名に対して `undefined` を返し、バリデーションをスキップすることを示します。`debounce: 300` が適用されると、リソースは各変更に対して動作する前に、ユーザーが300ミリ秒入力を一時停止するまで待ちます。その後、有効なユーザー名に対してローダーを実行し、デバウンスされた値が `undefined` に落ち着くとアイドル状態のままになります。
 
-### Combining debounce with additional logic
+### デバウンスと追加ロジックを組み合わせる {#combining-debounce-with-additional-logic}
 
-When you need logic beyond a plain duration debounce, use a custom factory to combine debouncing with that logic. A common case is caching validated responses. For example, once the server has confirmed a username, you don't need to ask again on subsequent keystrokes that revisit the same value.
+単純な時間指定デバウンスを超えるロジックが必要な場合は、カスタムfactoryを使用してデバウンスとそのロジックを組み合わせます。一般的なケースは、検証済みレスポンスのキャッシュです。たとえば、サーバーが一度ユーザー名を確認したら、同じ値に戻る後続のキーストロークで再度問い合わせる必要はありません。
 
 ```ts
 export class Registration {
@@ -571,18 +571,18 @@ export class Registration {
 }
 ```
 
-The `cache` lives in the factory's closure, so it persists for the field's lifetime. Once the user has typed a username the server has already checked, the loader reads from the cache instead of making a new network request.
+`cache` はfactoryのクロージャ内に存在するため、フィールドが存続する間は保持されます。ユーザーがサーバーでチェック済みのユーザー名を入力すると、ローダーは新しいネットワークリクエストを行う代わりにキャッシュから読み取ります。
 
-## Understanding pending state
+## pending状態を理解する {#understanding-pending-state}
 
-When async validation runs, the field's `pending()` signal returns `true`. During this time:
+非同期バリデーションが実行されると、フィールドの `pending()` シグナルは `true` を返します。この間は次のようになります。
 
-- `valid()` returns `false`
-- `invalid()` returns `false`
-- `errors()` returns an empty array
-- `submit()` waits for validation to complete
+- `valid()` は `false` を返します
+- `invalid()` は `false` を返します
+- `errors()` は空の配列を返します
+- `submit()` はバリデーションの完了を待ちます
 
-Show the pending state in your template to provide feedback:
+フィードバックを提供するために、テンプレートでpending状態を表示します。
 
 ```angular-html
 <input [formField]="loginForm.username" />
@@ -598,7 +598,7 @@ Show the pending state in your template to provide feedback:
 }
 ```
 
-Disable form submission while validation is pending:
+バリデーションがpending中はフォーム送信を無効化します。
 
 ```angular-html
 <button type="submit" [disabled]="loginForm().pending()">
@@ -610,11 +610,11 @@ Disable form submission while validation is pending:
 </button>
 ```
 
-TIP: See the [Field State Management guide](guide/forms/signals/field-state-management) for more patterns using `pending()`, `valid()`, and `invalid()` signals.
+TIP: `pending()`、`valid()`、`invalid()` シグナルを使うその他のパターンについては、[フィールド状態管理ガイド](guide/forms/signals/field-state-management)を参照してください。
 
-### Validation execution order
+### バリデーションの実行順序 {#validation-execution-order}
 
-Async validation only runs after synchronous validation passes. This prevents unnecessary server requests for invalid input:
+非同期バリデーションは、同期バリデーションが成功した後にのみ実行されます。これにより、無効な入力に対する不要なサーバーリクエストを防ぎます。
 
 ```ts
 import {form, required, minLength, validateHttp} from '@angular/forms/signals';
@@ -642,17 +642,17 @@ form(model, (schemaPath) => {
 });
 ```
 
-This execution order improves performance by reducing server load and catching format errors instantly.
+この実行順序は、サーバー負荷を減らし、形式エラーを即座に検出することでパフォーマンスを向上させます。
 
-### Request cancellation
+### リクエストのキャンセル {#request-cancellation}
 
-When a field value changes, Signal Forms automatically cancels any pending async validation request for that field. This prevents race conditions and ensures validation always reflects the current value. You don't need to implement cancellation logic yourself.
+フィールド値が変わると、シグナルフォームはそのフィールドに対する保留中の非同期バリデーションリクエストを自動的にキャンセルします。これにより競合状態を防ぎ、バリデーションが常に現在の値を反映することを保証します。キャンセルロジックを自分で実装する必要はありません。
 
-## Best practices
+## ベストプラクティス {#best-practices}
 
-### Combine with synchronous validation
+### 同期バリデーションと組み合わせる {#combine-with-synchronous-validation}
 
-Always validate format before making async requests. This catches errors instantly and prevents unnecessary server requests:
+非同期リクエストを行う前に、必ず形式を検証してください。これにより、エラーを即座に検出し、不要なサーバーリクエストを防ぎます。
 
 ```ts
 import {form, required, email, validateHttp} from '@angular/forms/signals';
@@ -680,9 +680,9 @@ form(model, (schemaPath) => {
 });
 ```
 
-### Skip validation when appropriate
+### 適切な場合はバリデーションをスキップする {#skip-validation-when-appropriate}
 
-Return `undefined` from the `request` function to skip validation. Use this to avoid validating empty fields or values that don't meet minimum requirements:
+バリデーションをスキップするには、`request` 関数から `undefined` を返します。空のフィールドや最小要件を満たさない値の検証を避けるために使用します。
 
 ```ts
 import {validateHttp} from '@angular/forms/signals';
@@ -709,9 +709,9 @@ validateHttp(schemaPath.username, {
 });
 ```
 
-### Handle errors gracefully
+### エラーを適切に処理する {#handle-errors-gracefully}
 
-Provide clear, user-friendly error messages. Log technical details for debugging but show simple messages to users:
+明確でユーザーフレンドリーなエラーメッセージを提供します。技術的な詳細はデバッグ用にログに記録し、ユーザーにはシンプルなメッセージを表示します。
 
 ```ts
 import {validateHttp} from '@angular/forms/signals';
@@ -739,9 +739,9 @@ validateHttp(schemaPath.field, {
 });
 ```
 
-### Show clear feedback
+### 明確なフィードバックを表示する {#show-clear-feedback}
 
-Use the `pending()` signal to show when validation is happening. This helps users understand delays and provides better perceived performance:
+`pending()` シグナルを使用して、バリデーションが実行中であることを表示します。これにより、ユーザーは遅延を理解しやすくなり、体感パフォーマンスも向上します。
 
 ```angular-html
 @if (field().pending()) {
@@ -758,18 +758,18 @@ Use the `pending()` signal to show when validation is happening. This helps user
 }
 ```
 
-## Next steps
+## 次のステップ {#next-steps}
 
-This guide covered async validation with `validateHttp()` and `validateAsync()`. Related guides explore other aspects of Signal Forms:
+このガイドでは、`validateHttp()` と `validateAsync()` による非同期バリデーションについて説明しました。関連ガイドでは、シグナルフォームの他の側面を探ります。
 
 <docs-pill-row>
-  <docs-pill href="guide/forms/signals/validation" title="Validation"/>
-  <docs-pill href="guide/forms/signals/field-state-management" title="Field State Management"/>
+  <docs-pill href="guide/forms/signals/validation" title="バリデーション"/>
+  <docs-pill href="guide/forms/signals/field-state-management" title="フィールド状態管理"/>
 </docs-pill-row>
 
-For detailed API documentation, see:
+詳細なAPIドキュメントについては、次を参照してください。
 
-- [`validateHttp()`](api/forms/signals/validateHttp) - HTTP-based async validation
-- [`validateAsync()`](api/forms/signals/validateAsync) - Custom resource-based async validation
-- [`httpResource()`](api/common/http/httpResource) - Angular's HTTP resource API
-- [`resource()`](api/core/resource) - Angular's resource primitive
+- [`validateHttp()`](api/forms/signals/validateHttp) - HTTPベースの非同期バリデーション
+- [`validateAsync()`](api/forms/signals/validateAsync) - カスタムリソースベースの非同期バリデーション
+- [`httpResource()`](api/common/http/httpResource) - AngularのHTTPリソースAPI
+- [`resource()`](api/core/resource) - Angularのリソースプリミティブ
